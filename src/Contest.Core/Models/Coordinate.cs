@@ -16,6 +16,17 @@
             _p = source._p;
         }
 
+        public byte x => _p[0];
+
+        public byte y => _p[1];
+
+        public byte z => _p[2];
+
         public static readonly Coordinate Zero = new Coordinate(0, 0, 0);
+
+        public Coordinate Translate(CoordinateDifference d)
+        {
+            return new Coordinate((byte)(x + d.x), (byte)(y + d.y), (byte)(z + d.z));
+        }
     }
 }

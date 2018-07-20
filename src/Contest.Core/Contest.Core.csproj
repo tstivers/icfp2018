@@ -44,6 +44,7 @@
     <Compile Include="Exceptions\CommandException.cs" />
     <Compile Include="Models\Bot.cs" />
     <Compile Include="Models\Coordinate.cs" />
+    <Compile Include="Models\CoordinateDifference.cs" />
     <Compile Include="Models\Matrix.cs" />
     <Compile Include="Models\MatterSystem.cs" />
     <Compile Include="Models\MdlFile.cs" />
