@@ -51,10 +51,15 @@ namespace Contest.Core.Models
             Harmonics = !Harmonics;
         }
 
-        public void CmdSmove(int bid, Coordinate c)
+        public void CmdSmove(int bid, CoordinateDifference d)
         {
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("smove", "bot does not exist");
+
+            if (!d.IsLongLinear)
+                throw new CommandException("smove", "not long linear difference");
+
+            var c = bot.Position.Translate(d);
 
             var mlen = Matrix.CalcStraightMove(bot.Position, c);
 
@@ -65,10 +70,16 @@ namespace Contest.Core.Models
             Energy += 2 * mlen;
         }
 
-        public void CmdLmove(int bid, Coordinate b, Coordinate c)
+        public void CmdLmove(int bid, CoordinateDifference d1, CoordinateDifference d2)
         {
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("lmove", "bot does not exist");
+
+            if (!d1.IsShortLinear || !d2.IsShortLinear)
+                throw new CommandException("smove", "not short linear difference");
+
+            var b = bot.Position.Translate(d1);
+            var c = bot.Position.Translate(d2);
 
             var mlen = Matrix.CalcLmove(bot.Position, b, c);
 
@@ -87,10 +98,15 @@ namespace Contest.Core.Models
             throw new NotImplementedException();
         }
 
-        public void CmdFill(int bid, Coordinate c)
+        public void CmdFill(int bid, CoordinateDifference d)
         {
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("fill", "bot does not exist");
+
+            if (!d.IsNear)
+                throw new CommandException("fill", "not near difference");
+
+            var c = bot.Position.Translate(d);
 
             if (Matrix.Get(c.x, c.y, c.z))
             {
