@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
+    <Compile Include="Exceptions\CommandException.cs" />
     <Compile Include="Models\Bot.cs" />
     <Compile Include="Models\Coordinate.cs" />
     <Compile Include="Models\Matrix.cs" />

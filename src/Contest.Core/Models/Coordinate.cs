@@ -15,5 +15,7 @@
         {
             _p = source._p;
         }
+
+        public static readonly Coordinate Zero = new Coordinate(0, 0, 0);
     }
 }

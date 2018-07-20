@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Contest.Core.Models
+﻿namespace Contest.Core.Models
 {
-    class Trace
+    public class Trace
     {
     }
 }

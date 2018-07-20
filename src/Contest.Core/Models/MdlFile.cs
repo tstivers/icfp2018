@@ -17,5 +17,12 @@ namespace Contest.Core.Models
 
             return matrix;
         }
+
+        public static void SaveModel(string filename, Matrix matrix)
+        {
+            byte[] ret = new byte[(matrix.Storage.Length - 1) / 8 + 1];
+            matrix.Storage.CopyTo(ret, 0);
+            File.WriteAllBytes(filename, new[] { matrix.Resolution }.Concat(ret).ToArray());
+        }
     }
 }
