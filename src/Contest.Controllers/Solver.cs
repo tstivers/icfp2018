@@ -1,23 +1,12 @@
-﻿using Contest.Core.Models;
+﻿using System.IO;
 
 namespace Contest.Controllers
 {
     public class Solver
     {
-        public MatterSystem _system;
-
-        public void Solve(string filename)
+        public void Solve()
         {
-            var target = MdlFile.LoadModel(filename);
-
-            _system = new MatterSystem(target.Resolution);
-
-            while (_system.Matrix != target)
-            {
-                // move the bot to the first target
-                // fill it
-                // end
-            }
+            Directory.SetCurrentDirectory(@"c:\users\tstivers\source\repos\icfp2018");
         }
     }
 }

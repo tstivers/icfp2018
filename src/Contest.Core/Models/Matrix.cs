@@ -9,7 +9,7 @@ namespace Contest.Core.Models
         public Matrix(byte resolution)
         {
             _r = resolution;
-            Storage = new BitArray(Resolution ^ 3);
+            Storage = new BitArray((int)Math.Pow(_r, 3));
         }
 
         public Matrix(byte resolution, byte[] data)
@@ -31,7 +31,8 @@ namespace Contest.Core.Models
 
         public bool Get(int x, int y, int z)
         {
-            return Storage.Get(x * _r * _r + y * _r + z);
+            int index = x * _r * _r + y * _r + z;
+            return Storage.Get(index);
         }
 
         public bool IsValidCoordinate(Coordinate c)
@@ -79,7 +80,7 @@ namespace Contest.Core.Models
                         return -1;
                 }
 
-                return Math.Abs(a.y - b.y);
+                return Math.Abs(a.x - b.x);
             }
 
             return 0; // not straight

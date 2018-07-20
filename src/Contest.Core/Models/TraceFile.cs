@@ -5,24 +5,26 @@ using System.IO;
 
 namespace Contest.Core
 {
-    internal class TraceFile
+    public class TraceFile
     {
-        public static void LoadTraceFile(string filename)
+        public static Trace LoadTraceFile(string filename)
         {
             if (!File.Exists(filename))
-                throw new ArgumentException($"file {filename} does not exist", nameof(filename));
+                throw new ArgumentException($"file {Path.GetFullPath(filename)} does not exist", nameof(filename));
 
             var bytes = File.ReadAllBytes(filename);
 
             var trace = new Trace();
             int ptr = 0;
 
-            while (ptr <= bytes.Length)
+            while (ptr < bytes.Length)
             {
                 var result = ParseCommand(ptr, bytes);
                 ptr += result.width;
                 trace.Commands.Add(result.command);
             }
+
+            return trace;
         }
 
         public static (int width, Command command) ParseCommand(int ptr, byte[] data)

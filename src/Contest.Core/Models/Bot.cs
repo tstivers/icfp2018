@@ -14,5 +14,10 @@ namespace Contest.Core.Models
             Position = position;
             Seeds = seeds ?? new List<int>();
         }
+
+        public override string ToString()
+        {
+            return $"[{Bid}] {Position}";
+        }
     }
 }

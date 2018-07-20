@@ -1,4 +1,6 @@
-﻿namespace Contest.Core.Models
+﻿using System.Collections.Generic;
+
+namespace Contest.Core.Models
 {
     public class Coordinate
     {
@@ -27,6 +29,39 @@
         public Coordinate Translate(CoordinateDifference d)
         {
             return new Coordinate((byte)(x + d.x), (byte)(y + d.y), (byte)(z + d.z));
+        }
+
+        public override string ToString()
+        {
+            return $"<{x}, {y}, {z}>";
+        }
+
+        public override bool Equals(object obj)
+        {
+            var coordinate = obj as Coordinate;
+            return coordinate != null &&
+                   x == coordinate.x &&
+                   y == coordinate.y &&
+                   z == coordinate.z;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 373119288;
+            hashCode = hashCode * -1521134295 + x.GetHashCode();
+            hashCode = hashCode * -1521134295 + y.GetHashCode();
+            hashCode = hashCode * -1521134295 + z.GetHashCode();
+            return hashCode;
+        }
+
+        public static bool operator ==(Coordinate coordinate1, Coordinate coordinate2)
+        {
+            return EqualityComparer<Coordinate>.Default.Equals(coordinate1, coordinate2);
+        }
+
+        public static bool operator !=(Coordinate coordinate1, Coordinate coordinate2)
+        {
+            return !(coordinate1 == coordinate2);
         }
     }
 }
