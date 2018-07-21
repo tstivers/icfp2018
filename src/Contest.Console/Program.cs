@@ -9,7 +9,7 @@ namespace Contest.Console
             log4net.Config.XmlConfigurator.Configure();
 
             var solver = new Solver();
-            solver.Solve("../../../../problems/LA043_tgt.mdl");
+            solver.Solve("../../../../problems/LA005_tgt.mdl");
         }
     }
 }

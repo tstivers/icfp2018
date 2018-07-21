@@ -4,7 +4,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Contest.Controllers
@@ -36,17 +35,17 @@ namespace Contest.Controllers
 
                 var targets = BuildTargetCoordStats(system, searchSpace, voxels);
 
-                Log.Info($"Considering {targets.Count:N0} potential taragets");
+                Log.Info($"Considering {targets.Count:N0} potential targets");
 
                 // sort targets based on potential
-                targets = targets.OrderBy(x => x.MLen - x.NearbyTargets.Count).ToList();
+                targets = targets.OrderBy(x => x.Coordinate.y).ThenByDescending(x => x.NearbyTargets.Count).ThenBy(x => x.MLen).ToList();
 
                 var pf = new AstarMatrixPather(system.Matrix);
                 BotTarget target = null;
 
                 foreach (var t in targets)
                 {
-                    Log.Info($"Examining {t.Coordinate} ({t.NearbyTargets.Count:N0} potential fills)");
+                    //Log.Info($"Examining {t.Coordinate} ({t.NearbyTargets.Count:N0} potential fills)");
 
                     // make sure we can nav there
                     (_, t.Commands) = pf.GetRouteTo(system.Bots[1].Position, t.Coordinate);
@@ -64,8 +63,6 @@ namespace Contest.Controllers
 
                     foreach (var fill in possibleFills)
                     {
-                        Log.Info($"Making sure fill {fill} does not block us in");
-
                         var dv = fill.GetDifference(t.Coordinate);
                         var cmd = new CommandFill(dv);
                         testSystem.ExecuteCommand(1, cmd);
@@ -75,14 +72,25 @@ namespace Contest.Controllers
                     var (_, commands) = testPf.GetRouteTo(testSystem.Bots[1].Position, Coordinate.Zero);
                     if (commands == null)
                     {
-                        Log.Info($"Possible blockage detected");
+                        //Log.Info($"Possible blockage detected");
                         continue;
+                    }
+
+                    foreach (var rv in voxels)
+                    {
+                        if (t.NearbyTargets.Contains(rv))
+                            continue;
+
+                        var (_, c) = testPf.GetRouteTo(testSystem.Bots[1].Position, rv);
+                        if (c == null)
+                        {
+                            Log.Info($"Possible voxel blockage detected");
+                            t.NearbyTargets.Clear();
+                        }
                     }
 
                     if (t.NearbyTargets.Count == 0)
                         continue;
-
-                    MdlFile.SaveModel("maybe.mdl", testSystem.Matrix);
 
                     target = t;
                     break;
@@ -160,8 +168,6 @@ namespace Contest.Controllers
 
         private List<BotTarget> BuildTargetCoordStats(MatterSystem src, List<Coordinate> space, HashSet<Coordinate> targets)
         {
-            var sw = Stopwatch.StartNew();
-
             var list = new ConcurrentBag<BotTarget>();
 
             foreach (var c in space)
@@ -176,8 +182,6 @@ namespace Contest.Controllers
                 cs.MLen = c.Mlen(src.Bots[1].Position);
                 list.Add(cs);
             }
-
-            Log.Debug($"Calculated {list.Count:N0} target routes in {sw.ElapsedMilliseconds:N0} ms");
 
             return list.ToList();
         }

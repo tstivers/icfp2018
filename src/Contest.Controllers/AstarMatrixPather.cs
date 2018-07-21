@@ -1,13 +1,15 @@
 ﻿using C5;
 using Contest.Core.Models;
-using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Contest.Controllers
 {
     public class AstarMatrixPather
     {
         private Matrix _map;
+
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly System.Collections.Generic.HashSet<Coordinate> _unreachable =
             new System.Collections.Generic.HashSet<Coordinate>();
@@ -19,6 +21,8 @@ namespace Contest.Controllers
 
         public (int cost, List<Command> commands) GetRouteTo(Coordinate start, Coordinate goal)
         {
+            var sw = Stopwatch.StartNew();
+
             var closed_set = new System.Collections.Generic.HashSet<Coordinate>();
             var came_from = new Dictionary<Coordinate, Coordinate>();
             var g_score = new Dictionary<Coordinate, float> { { start, 0 } };
@@ -36,7 +40,11 @@ namespace Contest.Controllers
                 current = open_set.DeleteMin();
 
                 if (current == goal)
+                {
+                    if (sw.ElapsedMilliseconds > 1000)
+                        Log.Debug($"Generated path in {sw.ElapsedMilliseconds:N0} ms ({closed_set.Count:N0} closed, {came_from.Count:N0} examined)");
                     return ReconstructPath(came_from, start, goal);
+                }
 
                 closed_set.Add(current);
 
@@ -70,6 +78,9 @@ namespace Contest.Controllers
                     }
                 }
             }
+
+            if (sw.ElapsedMilliseconds > 1000)
+                Log.Debug($"Failed to generate path path in {sw.ElapsedMilliseconds:N0} ms ({closed_set.Count:N0} closed, {came_from.Count:N0} examined)");
 
             return (0, null);
         }
@@ -128,16 +139,12 @@ namespace Contest.Controllers
 
         private float MoveCost(Coordinate current, Coordinate neighbor)
         {
-            return 3 + (2 * current.Mlen(neighbor)); // include turn cost
+            return 1;
         }
 
         private float GetDistance(Coordinate start, Coordinate goal)
         {
-            return
-                (float)
-                (Math.Sqrt(Math.Pow(Math.Abs((float)start.x - goal.x), 2) +
-                           Math.Pow(Math.Abs((float)start.y - goal.y), 2) +
-                           Math.Pow(Math.Abs((float)start.z - goal.z), 2)));
+            return start.Mlen(goal);
         }
 
         private class CoordComparer : IComparer<Coordinate>
