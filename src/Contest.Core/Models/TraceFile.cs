@@ -122,20 +122,9 @@ namespace Contest.Core
 
         public static Dictionary<int, CoordinateDifference> GenerateNearDistances()
         {
-            List<CoordinateDifference> nearDistances = new List<CoordinateDifference>();
-
-            for (sbyte x = -1; x <= 1; x++)
-                for (sbyte y = -1; y <= 1; y++)
-                    for (sbyte z = -1; z <= 1; z++)
-                    {
-                        var d = new CoordinateDifference(x, y, z);
-                        if (d.IsNear)
-                            nearDistances.Add(d);
-                    }
-
             var lookup = new Dictionary<int, CoordinateDifference>();
 
-            foreach (var d in nearDistances)
+            foreach (var d in CoordinateDifference.NearDifferences)
             {
                 byte coded = (byte)((d.x + 1) * 9 + (d.y + 1) * 3 + (d.z + 1));
 

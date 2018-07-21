@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Contest.Core.Models
 {
@@ -11,6 +12,11 @@ namespace Contest.Core.Models
             _p[0] = x;
             _p[1] = y;
             _p[2] = z;
+        }
+
+        public override string ToString()
+        {
+            return $"{{{x}, {y}, {z}}}";
         }
 
         public sbyte x => _p[0];
@@ -31,5 +37,23 @@ namespace Contest.Core.Models
                                     y == 0 && z == 0 && Math.Abs(x) <= 15;
 
         public bool IsNear => mlen <= 2 && clen == 1;
+
+        public static readonly CoordinateDifference[] NearDifferences = GenerateNearDistances();
+
+        private static CoordinateDifference[] GenerateNearDistances()
+        {
+            List<CoordinateDifference> nearDistances = new List<CoordinateDifference>();
+
+            for (sbyte x = -1; x <= 1; x++)
+                for (sbyte y = -1; y <= 1; y++)
+                    for (sbyte z = -1; z <= 1; z++)
+                    {
+                        var d = new CoordinateDifference(x, y, z);
+                        if (d.IsNear)
+                            nearDistances.Add(d);
+                    }
+
+            return nearDistances.ToArray();
+        }
     }
 }

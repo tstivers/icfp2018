@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Contest.Controllers;
 
 namespace Contest.Console
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
+            log4net.Config.XmlConfigurator.Configure();
+
+            var solver = new Solver();
+            solver.Solve("../../../../problems/LA001_tgt.mdl");
         }
     }
 }

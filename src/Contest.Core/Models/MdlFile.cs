@@ -9,7 +9,7 @@ namespace Contest.Core.Models
         public static Matrix LoadModel(string filename)
         {
             if (!File.Exists(filename))
-                throw new ArgumentException($"file {filename} does not exist", nameof(filename));
+                throw new ArgumentException($"file {Path.GetFullPath(filename)} does not exist", nameof(filename));
 
             var bytes = File.ReadAllBytes(filename);
 

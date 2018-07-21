@@ -1,6 +1,7 @@
 ﻿using Contest.Core.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Contest.Core.Models
 {
@@ -10,14 +11,25 @@ namespace Contest.Core.Models
         public Matrix Matrix { get; set; }
         public Dictionary<int, Bot> Bots { get; set; }
         public int Energy { get; set; }
+        public Trace Trace { get; set; }
 
         public MatterSystem(byte resolution)
         {
             Harmonics = false; // low
             Matrix = new Matrix(resolution);
-            var startBot = new Bot(0, Coordinate.Zero, null);
+            var startBot = new Bot(1, Coordinate.Zero, Enumerable.Range(2, 20).ToList());
             Bots = new Dictionary<int, Bot>();
             Bots.Add(startBot.Bid, startBot);
+            Trace = new Trace();
+        }
+
+        public MatterSystem(MatterSystem parent)
+        {
+            Harmonics = parent.Harmonics;
+            Matrix = new Matrix(parent.Matrix);
+            Energy = parent.Energy;
+            Bots = parent.Bots.Values.ToDictionary(x => x.Bid, y => new Bot(y));
+            Trace = new Trace();
         }
 
         public void CmdHalt(int bid)
@@ -61,7 +73,7 @@ namespace Contest.Core.Models
 
             var c = bot.Position.Translate(d);
 
-            var mlen = Matrix.CalcStraightMove(bot.Position, c);
+            var mlen = Matrix.CalcSmove(bot.Position, c);
 
             if (mlen <= 0)
                 throw new CommandException("smove", "invalid move");
@@ -116,6 +128,49 @@ namespace Contest.Core.Models
             {
                 Matrix.Set(c.x, c.y, c.z);
                 Energy += 12;
+            }
+        }
+
+        public void ExecuteCommand(int bid, Command c)
+        {
+            if (c is CommandHalt ch)
+            {
+                this.CmdHalt(bid);
+            }
+
+            if (c is CommandFill cf)
+            {
+                this.CmdFill(bid, cf.nd);
+            }
+
+            if (c is CommandFlip flip)
+            {
+                this.CmdFlip(bid);
+            }
+
+            if (c is CommandWait)
+            {
+                this.CmdWait(bid);
+            }
+
+            if (c is CommandLmove lmove)
+            {
+                this.CmdLmove(bid, lmove.d1, lmove.d2);
+            }
+
+            if (c is CommandSmove smove)
+            {
+                this.CmdSmove(bid, smove.d);
+            }
+
+            Trace.Commands.Add(c);
+        }
+
+        public void ExecuteCommands(List<Command> targetCommands)
+        {
+            foreach (var c in targetCommands)
+            {
+                ExecuteCommand(1, c);
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Contest.Core.Models
 {
@@ -13,6 +14,13 @@ namespace Contest.Core.Models
             Bid = id;
             Position = position;
             Seeds = seeds ?? new List<int>();
+        }
+
+        public Bot(Bot y)
+        {
+            Bid = y.Bid;
+            Position = y.Position;
+            Seeds = y.Seeds.ToList();
         }
 
         public override string ToString()

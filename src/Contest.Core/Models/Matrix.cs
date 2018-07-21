@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Contest.Core.Models
@@ -10,6 +11,12 @@ namespace Contest.Core.Models
         {
             _r = resolution;
             Storage = new BitArray((int)Math.Pow(_r, 3));
+        }
+
+        public Matrix(Matrix parent)
+        {
+            _r = parent.Resolution;
+            Storage = new BitArray(parent.Storage);
         }
 
         public Matrix(byte resolution, byte[] data)
@@ -31,7 +38,13 @@ namespace Contest.Core.Models
 
         public bool Get(int x, int y, int z)
         {
-            int index = x * _r * _r + y * _r + z;
+            var index = x * _r * _r + y * _r + z;
+            return Storage.Get(index);
+        }
+
+        public bool Get(Coordinate tc)
+        {
+            var index = tc.x * _r * _r + tc.y * _r + tc.z;
             return Storage.Get(index);
         }
 
@@ -45,7 +58,21 @@ namespace Contest.Core.Models
             return values.All(IsValidCoordinate);
         }
 
-        public int CalcStraightMove(Coordinate a, Coordinate b)
+        public List<Coordinate> GetValidNearbies(Coordinate start)
+        {
+            var l = new List<Coordinate>();
+
+            foreach (var d in CoordinateDifference.NearDifferences)
+            {
+                var c = start.Translate(d);
+                if (IsValidCoordinate(c) && !Get(c.x, c.y, c.z))
+                    l.Add(c);
+            }
+
+            return l;
+        }
+
+        public int CalcSmove(Coordinate a, Coordinate b)
         {
             if (!ValidCoordinates(a, b))
                 return -2;
@@ -88,15 +115,41 @@ namespace Contest.Core.Models
 
         public int CalcLmove(Coordinate a, Coordinate b, Coordinate c)
         {
-            var mlena = CalcStraightMove(a, b);
+            var mlena = CalcSmove(a, b);
             if (mlena <= 0)
                 return mlena;
 
-            var mlenb = CalcStraightMove(b, c);
+            var mlenb = CalcSmove(b, c);
             if (mlenb <= 0)
                 return mlenb;
 
             return mlena + mlenb;
+        }
+
+        public bool IsGrounded(Coordinate tc)
+        {
+            if (tc.y == 0)
+                return true;
+
+            if (tc.x > 0 && Get(tc.x - 1, tc.y, tc.z))
+                return true;
+
+            if (tc.x + 1 < Resolution && Get(tc.x + 1, tc.y, tc.z))
+                return true;
+
+            if (tc.y > 0 && Get(tc.x, tc.y - 1, tc.z))
+                return true;
+
+            if (tc.y + 1 < Resolution && Get(tc.x, tc.y + 1, tc.z))
+                return true;
+
+            if (tc.z > 0 && Get(tc.x, tc.y, tc.z - 1))
+                return true;
+
+            if (tc.z + 1 < Resolution && Get(tc.x, tc.y, tc.z + 1))
+                return true;
+
+            return false;
         }
     }
 }
