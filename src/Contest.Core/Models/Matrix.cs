@@ -62,12 +62,6 @@ namespace Contest.Core.Models
             return Storage.Get(index);
         }
 
-        public bool Get(Coordinate tc)
-        {
-            var index = tc.x * _r * _r + tc.y * _r + tc.z;
-            return Storage.Get(index);
-        }
-
         public bool IsValidCoordinate(Coordinate c)
         {
             return c.x < _r && c.y < _r && c.z < _r;
@@ -146,6 +140,7 @@ namespace Contest.Core.Models
             return mlena + mlenb;
         }
 
+        // grounded if adjacent to an existing cell
         public bool IsGrounded(Coordinate tc)
         {
             if (tc.y == 0)

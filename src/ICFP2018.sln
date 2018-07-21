@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contest.Controllers", "Cont
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contest.Console", "Contest.Console\Contest.Console.csproj", "{6599B8D1-AFC8-4A90-AEC6-EC41F0D10473}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contest.TraceOptimizer", "Contest.TraceOptimizer\Contest.TraceOptimizer.csproj", "{ABAA9379-D75F-47E0-AEC7-16AE6AB0F2CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{6599B8D1-AFC8-4A90-AEC6-EC41F0D10473}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6599B8D1-AFC8-4A90-AEC6-EC41F0D10473}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6599B8D1-AFC8-4A90-AEC6-EC41F0D10473}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ABAA9379-D75F-47E0-AEC7-16AE6AB0F2CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ABAA9379-D75F-47E0-AEC7-16AE6AB0F2CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ABAA9379-D75F-47E0-AEC7-16AE6AB0F2CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ABAA9379-D75F-47E0-AEC7-16AE6AB0F2CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

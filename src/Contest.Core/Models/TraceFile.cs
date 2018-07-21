@@ -66,6 +66,12 @@ namespace Contest.Core
                 return (1, new CommandFill(ParseNearDifference(nd)));
             }
 
+            if ((data[ptr] & 0b00000111) == 0b00000010)
+            {
+                var nd = data[ptr] >> 3;
+                return (1, new CommandVoid(ParseNearDifference(nd)));
+            }
+
             throw new ArgumentException($"Unknown command {data[ptr]}");
         }
 
@@ -159,6 +165,12 @@ namespace Contest.Core
                 {
                     byte coded = (byte)((cf.nd.x + 1) * 9 + (cf.nd.y + 1) * 3 + (cf.nd.z + 1));
                     bytes.Add((byte)((coded << 3) | 0b011));
+                }
+
+                if (c is CommandVoid cv)
+                {
+                    byte coded = (byte)((cv.nd.x + 1) * 9 + (cv.nd.y + 1) * 3 + (cv.nd.z + 1));
+                    bytes.Add((byte)((coded << 3) | 0b010));
                 }
 
                 if (c is CommandLmove lmove)

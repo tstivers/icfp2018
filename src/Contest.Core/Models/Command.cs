@@ -30,38 +30,34 @@
 
     public class CommandSmove : Command
     {
-        private CoordinateDifference _lld;
-
-        public CoordinateDifference d => _lld;
+        public CoordinateDifference d { get; }
 
         public CommandSmove(CoordinateDifference lld)
         {
-            _lld = lld;
+            d = lld;
         }
 
         public override string ToString()
         {
-            return $"SMove <{_lld.x}, {_lld.y}, {_lld.z}>";
+            return $"SMove <{d.x}, {d.y}, {d.z}>";
         }
     }
 
     public class CommandLmove : Command
     {
-        private CoordinateDifference _sld1;
-        private CoordinateDifference _sld2;
+        public CoordinateDifference d1 { get; }
 
-        public CoordinateDifference d1 => _sld1;
-        public CoordinateDifference d2 => _sld2;
+        public CoordinateDifference d2 { get; }
 
         public CommandLmove(CoordinateDifference sld1, CoordinateDifference sld2)
         {
-            _sld1 = sld1;
-            _sld2 = sld2;
+            d1 = sld1;
+            d2 = sld2;
         }
 
         public override string ToString()
         {
-            return $"LMove <{_sld1.x}, {_sld1.y}, {_sld1.z}> <{_sld2.x}, {_sld2.y}, {_sld2.z}>";
+            return $"LMove <{d1.x}, {d1.y}, {d1.z}> <{d2.x}, {d2.y}, {d2.z}>";
         }
     }
 
@@ -79,18 +75,31 @@
 
     public class CommandFill : Command
     {
-        private CoordinateDifference _nd;
-
-        public CoordinateDifference nd => _nd;
+        public CoordinateDifference nd { get; }
 
         public CommandFill(CoordinateDifference nd)
         {
-            _nd = nd;
+            this.nd = nd;
         }
 
         public override string ToString()
         {
-            return $"Fill <{_nd.x}, {_nd.y}, {_nd.z}>";
+            return $"Fill <{nd.x}, {nd.y}, {nd.z}>";
+        }
+    }
+
+    public class CommandVoid : Command
+    {
+        public CoordinateDifference nd { get; }
+
+        public CommandVoid(CoordinateDifference nd)
+        {
+            this.nd = nd;
+        }
+
+        public override string ToString()
+        {
+            return $"Void <{nd.x}, {nd.y}, {nd.z}>";
         }
     }
 }

@@ -27,6 +27,7 @@ namespace Contest.Core.Models
 
         public int mlen => Math.Abs(x) + Math.Abs(y) + Math.Abs(z);
         public int clen => Math.Max(Math.Max(Math.Abs(x), Math.Abs(y)), Math.Abs(z));
+        public int len => Math.Abs(x + y + z);
 
         public bool IsShortLinear => x == 0 && y == 0 && Math.Abs(z) <= 5 ||
                                      x == 0 && z == 0 && Math.Abs(y) <= 5 ||
@@ -37,6 +38,8 @@ namespace Contest.Core.Models
                                     y == 0 && z == 0 && Math.Abs(x) <= 15;
 
         public bool IsNear => mlen <= 2 && clen == 1;
+
+        public byte Direction => x == 0 ? y == 0 ? (byte)0b11 : (byte)0b10 : (byte)0b01;
 
         public static readonly CoordinateDifference[] NearDifferences = GenerateNearDistances();
 
