@@ -1,11 +1,9 @@
 ﻿using Contest.Core;
 using Contest.Core.Models;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Contest.Controllers
 {
@@ -26,24 +24,27 @@ namespace Contest.Controllers
             var voxels = GetRemainingBlocks(system.Matrix, targetMatrix);
 
             Log.Info($"{voxels.Count:N0} total voxels to fill");
+            int start = voxels.Count;
+            int lastComplete = 0;
 
             // while (! done)
             while (targetMatrix != system.Matrix)
             {
                 var searchSpace = GenerateSearchSpace(voxels, system.Matrix);
-                Log.Info($"Searching space of {searchSpace.Count:N0} voxels");
-                Log.Info($"Bot is at {system.Bots[1].Position}");
+                //Log.Info($"Searching space of {searchSpace.Count:N0} voxels");
+                //Log.Info($"Bot is at {system.Bots[1].Position}");
 
                 var targets = BuildTargetCoordStats(system, searchSpace, voxels);
 
-                Log.Info($"Considering {targets.Count:N0} potential targets");
+                //Log.Info($"Considering {targets.Count:N0} potential targets");
 
                 // sort targets based on potential
-                targets = targets.OrderByDescending(x => x.NearbyTargets.Count).ThenBy(x => x.MLen).ToList();
+                targets = targets.OrderBy(x => x.NearbyTargets.Min(t => t.y))
+                    .ThenByDescending(x => x.NearbyTargets.Count(t => t.y == x.NearbyTargets.Min(y => y.y)))
+                    .ThenBy(x => system.Bots[1].Position.Mlen(x.Coordinate)).ToList();
 
                 var pf = new AstarMatrixPather(system.Matrix);
                 BotTarget target = null;
-                Coordinate targetFill = null;
 
                 foreach (var t in targets)
                 {
@@ -57,6 +58,9 @@ namespace Contest.Controllers
                         Log.Info($"Could not navigate to {t.Coordinate}");
                         continue;
                     }
+
+                    // filter out fills that aren't on the lowest level
+                    t.NearbyTargets = t.NearbyTargets.Where(x => x.y == t.NearbyTargets.Min(y => y.y)).ToList();
 
                     // check fills to make sure they don't block anything
                     var possibleFills = t.NearbyTargets.Select(x => x).ToList();
@@ -78,26 +82,29 @@ namespace Contest.Controllers
                             continue;
                         }
 
-                        bool remove = false;
+                        //bool remove = false;
 
-                        //foreach (var rv in voxels)
-                        Parallel.ForEach(voxels, rv =>
-                        {
-                            if (t.NearbyTargets.Contains(rv))
-                                return;
+                        ////foreach (var rv in voxels)
+                        //Parallel.ForEach(voxels, rv =>
+                        //{
+                        //    if (remove)
+                        //        return;
 
-                            var (_, c) = testPf.GetRouteTo(testSystem.Bots[1].Position, rv);
-                            if (c == null)
-                            {
-                                remove = true;
-                            }
-                        });
+                        //    if (t.NearbyTargets.Contains(rv))
+                        //        return;
 
-                        if (remove)
-                        {
-                            t.NearbyTargets.Remove(fill);
-                            testSystem.Matrix.Unset(fill.x, fill.y, fill.z);
-                        }
+                        //    var (_, c) = testPf.GetRouteTo(testSystem.Bots[1].Position, rv);
+                        //    if (c == null)
+                        //    {
+                        //        remove = true;
+                        //    }
+                        //});
+
+                        //if (remove)
+                        //{
+                        //    t.NearbyTargets.Remove(fill);
+                        //    testSystem.Matrix.Unset(fill.x, fill.y, fill.z);
+                        //}
                     }
 
                     if (t.NearbyTargets.Count == 0)
@@ -109,10 +116,11 @@ namespace Contest.Controllers
 
                 if (target != null)
                 {
-                    Log.Info($"Target selected: {target.Coordinate} ({target.NearbyTargets.Count} nearby targets)");
+                    //Log.Info($"Target selected: {target.Coordinate} ({target.NearbyTargets.Count} nearby targets)");
 
                     // move to it
-                    system.ExecuteCommands(target.Commands);
+                    var cc = CompressCommands(target.Commands);
+                    system.ExecuteCommands(cc);
 
                     // fill it
                     foreach (var fc in target.NearbyTargets)
@@ -140,16 +148,48 @@ namespace Contest.Controllers
                     // halt
                     system.ExecuteCommand(1, new CommandHalt());
                     targetMatrix = system.Matrix;
+                    TraceFile.WriteTraceFile(outputFile, system.Trace);
+                    Log.Error($"{Path.GetFileName(filename)} finished");
                 }
 
-                Log.Info($"{voxels.Count:N0} target voxels left");
+                int complete = (int)(100 - ((float)voxels.Count / start * 100));
+                if (complete != lastComplete)
+                {
+                    lastComplete = complete;
+                    Log.Info($"{Path.GetFileName(filename)} {100 - ((float)voxels.Count / start * 100):N0}% complete");
+                }
 
-                MdlFile.SaveModel("test.mdl", system.Matrix);
-                TraceFile.WriteTraceFile("test.nbt", system.Trace);
-                TraceFile.WriteTraceFile(outputFile, system.Trace);
+                //MdlFile.SaveModel("test.mdl", system.Matrix);
+                //TraceFile.WriteTraceFile("test.nbt", system.Trace);
+                //TraceFile.WriteTraceFile(outputFile, system.Trace);
             }
 
             // finish trace
+        }
+
+        private List<Command> CompressCommands(List<Command> commands)
+        {
+            if (commands.Count < 2)
+                return commands;
+
+            var l = new List<Command>();
+
+            for (int i = 0; i < commands.Count; i++)
+            {
+                if (commands[i] is CommandSmove c1 && i + 1 < commands.Count && commands[i + 1] is CommandSmove c2)
+                {
+                    if (c1.d.IsShortLinear && c2.d.IsShortLinear)
+                    {
+                        l.Add(new CommandLmove(c1.d, c2.d));
+                        i++;
+                        continue;
+                    }
+                }
+
+                l.Add(commands[i]);
+            }
+
+            return l;
         }
 
         // generate list of blocks
@@ -180,22 +220,19 @@ namespace Contest.Controllers
 
         private List<BotTarget> BuildTargetCoordStats(MatterSystem src, List<Coordinate> space, HashSet<Coordinate> targets)
         {
-            var list = new ConcurrentBag<BotTarget>();
+            var list = new List<BotTarget>();
 
             foreach (var c in space)
             {
                 // get voxels that can be filled from here
-                var potentialFills = src.Matrix.GetValidNearbies(c);
-                potentialFills = potentialFills.Where(targets.Contains).ToList();
-                potentialFills = potentialFills.Where(src.Matrix.IsGrounded).ToList();
+                var potentialFills = src.Matrix.GetValidNearbies(c).Where(targets.Contains).Where(src.Matrix.IsGrounded).ToList();
 
                 var cs = new BotTarget(c);
                 cs.NearbyTargets = potentialFills;
-                cs.MLen = c.Mlen(src.Bots[1].Position);
                 list.Add(cs);
             }
 
-            return list.ToList();
+            return list;
         }
     }
 }

@@ -163,7 +163,43 @@ namespace Contest.Core
 
                 if (c is CommandLmove lmove)
                 {
-                    throw new NotImplementedException();
+                    byte a = 0;
+                    byte b = 0;
+
+                    if (lmove.d1.x != 0)
+                    {
+                        a = 0b00011100;
+                        b = (byte)(lmove.d1.x + 5);
+                    }
+                    else if (lmove.d1.y != 0)
+                    {
+                        a = 0b00101100;
+                        b = (byte)(lmove.d1.y + 5);
+                    }
+                    else
+                    {
+                        a = 0b00111100;
+                        b = (byte)(lmove.d1.z + 5);
+                    }
+
+                    if (lmove.d2.x != 0)
+                    {
+                        a = (byte)(a | 0b01000000);
+                        b = (byte)(b | (lmove.d2.x + 5) << 4);
+                    }
+                    else if (lmove.d2.y != 0)
+                    {
+                        a = (byte)(a | 0b10000000);
+                        b = (byte)(b | (lmove.d2.y + 5) << 4);
+                    }
+                    else
+                    {
+                        a = (byte)(a | 0b11000000);
+                        b = (byte)(b | (lmove.d2.z + 5) << 4);
+                    }
+
+                    bytes.Add(a);
+                    bytes.Add(b);
                 }
 
                 if (c is CommandSmove smove)

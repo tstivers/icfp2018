@@ -108,31 +108,65 @@ namespace Contest.Controllers
 
             // calculate all valid smoves
 
-            for (sbyte i = -15; i < 16; i++)
+            for (sbyte i = -1; i >= -15; i--)
             {
                 var d = new CoordinateDifference(i, 0, 0);
                 var c = origin.Translate(d);
                 if (_map.CalcSmove(origin, c) > 0)
                     list.Add(c);
+                else
+                    break;
             }
 
-            for (sbyte i = -15; i < 16; i++)
+            for (sbyte i = 1; i <= 15; i++)
+            {
+                var d = new CoordinateDifference(i, 0, 0);
+                var c = origin.Translate(d);
+                if (_map.CalcSmove(origin, c) > 0)
+                    list.Add(c);
+                else
+                    break;
+            }
+
+            for (sbyte i = -1; i >= -15; i--)
             {
                 var d = new CoordinateDifference(0, i, 0);
                 var c = origin.Translate(d);
                 if (_map.CalcSmove(origin, c) > 0)
                     list.Add(c);
+                else
+                    break;
             }
 
-            for (sbyte i = -15; i < 16; i++)
+            for (sbyte i = 1; i <= 15; i++)
+            {
+                var d = new CoordinateDifference(0, i, 0);
+                var c = origin.Translate(d);
+                if (_map.CalcSmove(origin, c) > 0)
+                    list.Add(c);
+                else
+                    break;
+            }
+
+            for (sbyte i = -1; i >= -15; i--)
             {
                 var d = new CoordinateDifference(0, 0, i);
                 var c = origin.Translate(d);
                 if (_map.CalcSmove(origin, c) > 0)
                     list.Add(c);
+                else
+                    break;
             }
 
-            // calculate all valid lmoves
+            for (sbyte i = 1; i <= 15; i++)
+            {
+                var d = new CoordinateDifference(0, 0, i);
+                var c = origin.Translate(d);
+                if (_map.CalcSmove(origin, c) > 0)
+                    list.Add(c);
+                else
+                    break;
+            }
 
             return list;
         }

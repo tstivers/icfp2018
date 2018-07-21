@@ -57,6 +57,10 @@
       <Project>{262F1E05-9110-4F18-8E9B-266320D13E62}</Project>
       <Name>Contest.Controllers</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Contest.Core\Contest.Core.csproj">
+      <Project>{66703FEC-EC7D-4BE6-8C23-462CB1523A16}</Project>
+      <Name>Contest.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

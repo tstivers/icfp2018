@@ -7,13 +7,12 @@ namespace Contest.Controllers
     {
         public BotTarget(Coordinate c)
         {
-            this.Coordinate = c;
-            NearbyTargets = new SynchronizedCollection<Coordinate>();
+            Coordinate = c;
+            NearbyTargets = new List<Coordinate>();
         }
 
         public Coordinate Coordinate { get; }
         public IList<Coordinate> NearbyTargets { get; set; }
-        public int MLen { get; set; }
         public List<Command> Commands { get; set; }
     }
 }

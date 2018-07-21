@@ -31,6 +31,21 @@ namespace Contest.Core.Models
 
         public readonly BitArray Storage;
 
+        public int Voxels
+        {
+            get
+            {
+                int count = 0;
+                for (int x = 0; x < _r; x++)
+                    for (int y = 0; y < _r; y++)
+                        for (int z = 0; z < _r; z++)
+                            if (Get(x, y, z))
+                                count++;
+
+                return count;
+            }
+        }
+
         public void Set(int x, int y, int z)
         {
             Storage.Set(x * _r * _r + y * _r + z, true);

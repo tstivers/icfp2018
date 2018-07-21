@@ -91,7 +91,7 @@ namespace Contest.Core.Models
                 throw new CommandException("smove", "not short linear difference");
 
             var b = bot.Position.Translate(d1);
-            var c = bot.Position.Translate(d2);
+            var c = b.Translate(d2);
 
             var mlen = Matrix.CalcLmove(bot.Position, b, c);
 
