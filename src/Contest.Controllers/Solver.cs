@@ -1,4 +1,6 @@
-﻿using Contest.Core.Models;
+﻿using Contest.Core;
+using Contest.Core.Models;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -63,39 +65,68 @@ namespace Contest.Controllers
                     foreach (var fill in possibleFills)
                     {
                         Log.Info($"Making sure fill {fill} does not block us in");
-                        testSystem.CmdFill(1, t.Coordinate.GetDifference(fill));
-                        var testPf = new AstarMatrixPather(testSystem.Matrix);
-                        var (_, commands) = testPf.GetRouteTo(t.Coordinate, Coordinate.Zero);
-                        if (commands == null)
-                        {
-                            Log.Info($"Removed {fill}");
-                            t.NearbyTargets.Remove(fill);
-                        }
+
+                        var dv = fill.GetDifference(t.Coordinate);
+                        var cmd = new CommandFill(dv);
+                        testSystem.ExecuteCommand(1, cmd);
+                    }
+
+                    var testPf = new AstarMatrixPather(testSystem.Matrix);
+                    var (_, commands) = testPf.GetRouteTo(testSystem.Bots[1].Position, Coordinate.Zero);
+                    if (commands == null)
+                    {
+                        Log.Info($"Possible blockage detected");
+                        continue;
                     }
 
                     if (t.NearbyTargets.Count == 0)
                         continue;
 
+                    MdlFile.SaveModel("maybe.mdl", testSystem.Matrix);
+
                     target = t;
                     break;
                 }
 
-                Log.Info($"Target selected: {target.Coordinate} ({target.NearbyTargets.Count} nearby targets)");
-
-                // move to it
-                system.ExecuteCommands(target.Commands);
-
-                // fill it
-                foreach (var fc in target.NearbyTargets)
+                if (target != null)
                 {
-                    var dv = fc.GetDifference(target.Coordinate);
-                    system.CmdFill(1, dv);
-                    voxels.Remove(fc);
+                    Log.Info($"Target selected: {target.Coordinate} ({target.NearbyTargets.Count} nearby targets)");
+
+                    // move to it
+                    system.ExecuteCommands(target.Commands);
+
+                    // fill it
+                    foreach (var fc in target.NearbyTargets)
+                    {
+                        var dv = fc.GetDifference(target.Coordinate);
+                        var cmd = new CommandFill(dv);
+                        system.ExecuteCommand(1, cmd);
+                        voxels.Remove(fc);
+                    }
+                }
+                else
+                {
+                    // navigate home
+                    var bleh = new AstarMatrixPather(system.Matrix);
+                    var (_, zc) = bleh.GetRouteTo(system.Bots[1].Position, Coordinate.Zero);
+
+                    if (zc == null)
+                    {
+                        Log.Error("Could not nav home");
+                        throw new Exception();
+                    }
+
+                    system.ExecuteCommands(zc);
+
+                    // halt
+                    system.ExecuteCommand(1, new CommandHalt());
+                    targetMatrix = system.Matrix;
                 }
 
                 Log.Info($"{voxels.Count:N0} target voxels left");
 
                 MdlFile.SaveModel("test.mdl", system.Matrix);
+                TraceFile.WriteTraceFile("test.nbt", system.Trace);
             }
 
             // finish trace

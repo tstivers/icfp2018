@@ -15,7 +15,7 @@ namespace Contest.Core.Tests
         [Test]
         public void LoadTraceFile()
         {
-            var trace = TraceFile.LoadTraceFile("traces/LA001.nbt");
+            var trace = TraceFile.LoadTraceFile("src/Contest.Console/bin/Debug/test.npt");
             Assert.That(trace.Commands.Count, Is.GreaterThan(0));
         }
     }

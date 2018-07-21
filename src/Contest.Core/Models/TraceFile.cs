@@ -133,5 +133,66 @@ namespace Contest.Core
 
             return lookup;
         }
+
+        public static void WriteTraceFile(string filename, Trace trace)
+        {
+            var bytes = new List<byte>();
+
+            foreach (var c in trace.Commands)
+            {
+                if (c is CommandHalt ch)
+                {
+                    bytes.Add(0xff);
+                }
+
+                if (c is CommandWait)
+                {
+                    bytes.Add(0xfe);
+                }
+
+                if (c is CommandFlip flip)
+                {
+                    bytes.Add(0xfd);
+                }
+
+                if (c is CommandFill cf)
+                {
+                    byte coded = (byte)((cf.nd.x + 1) * 9 + (cf.nd.y + 1) * 3 + (cf.nd.z + 1));
+                    bytes.Add((byte)((coded << 3) | 0b011));
+                }
+
+                if (c is CommandLmove lmove)
+                {
+                    throw new NotImplementedException();
+                }
+
+                if (c is CommandSmove smove)
+                {
+                    byte a = 0;
+                    byte b = 0;
+
+                    if (smove.d.x != 0)
+                    {
+                        a = 0b00010100;
+                        b = (byte)(smove.d.x + 15);
+                    }
+                    else if (smove.d.y != 0)
+                    {
+                        a = 0b00100100;
+                        b = (byte)(smove.d.y + 15);
+                    }
+                    else
+                    {
+                        a = 0b00110100;
+                        b = (byte)(smove.d.z + 15);
+                    }
+
+                    bytes.Add(a);
+                    bytes.Add(b);
+                }
+            }
+
+            File.WriteAllBytes(filename, bytes.ToArray());
+        }
     }
 }

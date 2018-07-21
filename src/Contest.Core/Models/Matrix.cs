@@ -36,6 +36,11 @@ namespace Contest.Core.Models
             Storage.Set(x * _r * _r + y * _r + z, true);
         }
 
+        public void Unset(byte x, byte y, byte z)
+        {
+            Storage.Set(x * _r * _r + y * _r + z, false);
+        }
+
         public bool Get(int x, int y, int z)
         {
             var index = x * _r * _r + y * _r + z;
