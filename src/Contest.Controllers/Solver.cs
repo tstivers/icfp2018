@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Contest.Controllers
 {
@@ -12,7 +13,7 @@ namespace Contest.Controllers
     {
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public void Solve(string filename)
+        public void Solve(string filename, string outputFile)
         {
             Log.Info($"Solving file {filename}");
 
@@ -38,10 +39,11 @@ namespace Contest.Controllers
                 Log.Info($"Considering {targets.Count:N0} potential targets");
 
                 // sort targets based on potential
-                targets = targets.OrderBy(x => x.Coordinate.y).ThenByDescending(x => x.NearbyTargets.Count).ThenBy(x => x.MLen).ToList();
+                targets = targets.OrderByDescending(x => x.NearbyTargets.Count).ThenBy(x => x.MLen).ToList();
 
                 var pf = new AstarMatrixPather(system.Matrix);
                 BotTarget target = null;
+                Coordinate targetFill = null;
 
                 foreach (var t in targets)
                 {
@@ -56,7 +58,7 @@ namespace Contest.Controllers
                         continue;
                     }
 
-                    // check each fill to make sure we can still nav back to 0,0
+                    // check fills to make sure they don't block anything
                     var possibleFills = t.NearbyTargets.Select(x => x).ToList();
                     var testSystem = new MatterSystem(system);
                     testSystem.ExecuteCommands(t.Commands);
@@ -66,26 +68,35 @@ namespace Contest.Controllers
                         var dv = fill.GetDifference(t.Coordinate);
                         var cmd = new CommandFill(dv);
                         testSystem.ExecuteCommand(1, cmd);
-                    }
 
-                    var testPf = new AstarMatrixPather(testSystem.Matrix);
-                    var (_, commands) = testPf.GetRouteTo(testSystem.Bots[1].Position, Coordinate.Zero);
-                    if (commands == null)
-                    {
-                        //Log.Info($"Possible blockage detected");
-                        continue;
-                    }
-
-                    foreach (var rv in voxels)
-                    {
-                        if (t.NearbyTargets.Contains(rv))
-                            continue;
-
-                        var (_, c) = testPf.GetRouteTo(testSystem.Bots[1].Position, rv);
-                        if (c == null)
+                        var testPf = new AstarMatrixPather(testSystem.Matrix);
+                        var (_, commands) = testPf.GetRouteTo(testSystem.Bots[1].Position, Coordinate.Zero);
+                        if (commands == null)
                         {
-                            Log.Info($"Possible voxel blockage detected");
-                            t.NearbyTargets.Clear();
+                            t.NearbyTargets.Remove(fill);
+                            testSystem.Matrix.Unset(fill.x, fill.y, fill.z);
+                            continue;
+                        }
+
+                        bool remove = false;
+
+                        //foreach (var rv in voxels)
+                        Parallel.ForEach(voxels, rv =>
+                        {
+                            if (t.NearbyTargets.Contains(rv))
+                                return;
+
+                            var (_, c) = testPf.GetRouteTo(testSystem.Bots[1].Position, rv);
+                            if (c == null)
+                            {
+                                remove = true;
+                            }
+                        });
+
+                        if (remove)
+                        {
+                            t.NearbyTargets.Remove(fill);
+                            testSystem.Matrix.Unset(fill.x, fill.y, fill.z);
                         }
                     }
 
@@ -135,6 +146,7 @@ namespace Contest.Controllers
 
                 MdlFile.SaveModel("test.mdl", system.Matrix);
                 TraceFile.WriteTraceFile("test.nbt", system.Trace);
+                TraceFile.WriteTraceFile(outputFile, system.Trace);
             }
 
             // finish trace

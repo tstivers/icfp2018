@@ -8,11 +8,11 @@ namespace Contest.Controllers
         public BotTarget(Coordinate c)
         {
             this.Coordinate = c;
-            NearbyTargets = new List<Coordinate>();
+            NearbyTargets = new SynchronizedCollection<Coordinate>();
         }
 
         public Coordinate Coordinate { get; }
-        public List<Coordinate> NearbyTargets { get; set; }
+        public IList<Coordinate> NearbyTargets { get; set; }
         public int MLen { get; set; }
         public List<Command> Commands { get; set; }
     }
