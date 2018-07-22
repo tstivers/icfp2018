@@ -51,7 +51,7 @@ namespace Contest.TraceOptimizer
             else
                 Log.Info($"{Path.GetFileName(inputfile)} : No Change");
 
-            TraceFile.WriteTraceFile(outputfile, trace);
+            //TraceFile.WriteTraceFile(outputfile, trace);
         }
     }
 }

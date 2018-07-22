@@ -2,6 +2,7 @@
 using Contest.Core.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Contest.Controllers
 {
@@ -116,14 +117,9 @@ namespace Contest.Controllers
             return (commands.Count, commands);
         }
 
-        public Voxel[] AdjacentVoxels(Voxel origin)
+        public IEnumerable<Voxel> AdjacentVoxels(Voxel origin)
         {
-            return origin.Adjacent;
-        }
-
-        private float GetHScore(Coordinate current, Coordinate neighbor)
-        {
-            return 1;
+            return origin.Adjacent.Where(x => !x.Filled && !x.Volatile);
         }
 
         private float GetGScore(Coordinate start, Coordinate goal)

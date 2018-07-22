@@ -59,10 +59,7 @@ namespace Contest.Core.Models
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("smove", "bot does not exist");
 
-            if (!d.IsLongLinear)
-                throw new CommandException("smove", "not long linear difference");
-
-            var c = bot.Position.Translate(d);
+            bot.Position = Matrix.Get(bot.Position.X + d.x, bot.Position.Y + d.y, bot.Position.Z + d.z);
         }
 
         public void CmdLmove(int bid, CoordinateDifference d1, CoordinateDifference d2)
@@ -70,11 +67,7 @@ namespace Contest.Core.Models
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("lmove", "bot does not exist");
 
-            if (!d1.IsShortLinear || !d2.IsShortLinear)
-                throw new CommandException("smove", "not short linear difference");
-
-            var b = bot.Position.Translate(d1);
-            var c = b.Translate(d2);
+            bot.Position = Matrix.Get(bot.Position.X + d1.x + d2.x, bot.Position.Y + d1.y + d2.y, bot.Position.Z + d1.z + d2.z);
         }
 
         public void CmdFission(int bid, Coordinate c, int m)
@@ -90,18 +83,15 @@ namespace Contest.Core.Models
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("fill", "bot does not exist");
 
-            if (!d.IsNear)
-                throw new CommandException("fill", "not near difference");
+            Matrix.Get(bot.Position.X + d.x, bot.Position.Y + d.y, bot.Position.Z + d.z).Filled = true;
+        }
 
-            var c = bot.Position.Translate(d);
+        public void CmdVoid(int bid, CoordinateDifference d)
+        {
+            if (!Bots.TryGetValue(bid, out var bot))
+                throw new CommandException("void", "bot does not exist");
 
-            if (Matrix.Get(c.X, c.Y, c.Z).Filled)
-            {
-            }
-            else
-            {
-                Matrix.Get(c.X, c.Y, c.Z).Filled = true;
-            }
+            Matrix.Get(bot.Position.X + d.x, bot.Position.Y + d.y, bot.Position.Z + d.z).Filled = false;
         }
 
         public void ExecuteCommand(int bid, Command c)
@@ -114,6 +104,11 @@ namespace Contest.Core.Models
             if (c is CommandFill cf)
             {
                 this.CmdFill(bid, cf.nd);
+            }
+
+            if (c is CommandVoid cv)
+            {
+                this.CmdVoid(bid, cv.nd);
             }
 
             if (c is CommandFlip flip)

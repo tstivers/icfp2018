@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Contest.Core.Helpers;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,7 +64,6 @@ namespace Contest.Core.Models
                         var voxel = Get(x, y, z);
                         CalculateAdjacent(voxel);
                         CalculateNearby(voxel);
-                        voxel.Grounded = voxel.Nearby.Any(v => v.Filled);
                     }
         }
 
@@ -217,6 +217,18 @@ namespace Contest.Core.Models
         public bool IsValidMove(Coordinate start, IMoveCommand command)
         {
             return true;
+        }
+
+        public bool WillUnground(Voxel voxel)
+        {
+            foreach (var v in voxel.Adjacent.Where(x => x.Filled))
+            {
+                // find path from v to ground
+                if (!AstarGroundFinder.CanReachGround(v, voxel, this))
+                    return true;
+            }
+
+            return false;
         }
     }
 }

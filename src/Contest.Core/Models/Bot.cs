@@ -6,10 +6,10 @@ namespace Contest.Core.Models
     public class Bot
     {
         public int Bid { get; set; }
-        public Coordinate Position { get; set; }
+        public Voxel Position { get; set; }
         public List<int> Seeds { get; set; }
 
-        public Bot(int id, Coordinate position, List<int> seeds)
+        public Bot(int id, Voxel position, List<int> seeds)
         {
             Bid = id;
             Position = position;

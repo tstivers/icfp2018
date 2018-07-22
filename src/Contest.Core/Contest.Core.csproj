@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\AstarGroundFinder.cs" />
     <Compile Include="Exceptions\CommandException.cs" />
     <Compile Include="Helpers\AstarMatrixPather.cs" />
     <Compile Include="Helpers\CommandOptimizer.cs" />

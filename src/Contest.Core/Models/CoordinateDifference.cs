@@ -58,5 +58,33 @@ namespace Contest.Core.Models
 
             return nearDistances.ToArray();
         }
+
+        private static readonly sbyte[] _posX = { 1, 0, 0 };
+        private static readonly sbyte[] _posY = { 0, 1, 0 };
+        private static readonly sbyte[] _posZ = { 0, 0, 1 };
+        private static readonly sbyte[] _negX = { -1, 0, 0 };
+        private static readonly sbyte[] _negY = { 0, -1, 0 };
+        private static readonly sbyte[] _negZ = { 0, 0, -1 };
+
+        public sbyte[] Offset
+        {
+            get
+            {
+                if (x > 0)
+                    return _posX;
+                if (x < 0)
+                    return _negX;
+                if (y > 0)
+                    return _posY;
+                if (y < 0)
+                    return _negY;
+                if (z > 0)
+                    return _posZ;
+                if (z < 0)
+                    return _negZ;
+
+                throw new ArgumentException();
+            }
+        }
     }
 }
