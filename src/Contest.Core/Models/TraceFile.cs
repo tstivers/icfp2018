@@ -53,7 +53,7 @@ namespace Contest.Core
 
             if ((data[ptr] & 0b00001111) == 0b00001100)
             {
-                var sld1a = (data[ptr] >> 4) & 0b000000;
+                var sld1a = (data[ptr] >> 4) & 0b00000011;
                 var sld2a = data[ptr] >> 6;
                 var sld1i = data[ptr + 1] & 0b00001111;
                 var sld2i = data[ptr + 1] >> 4;

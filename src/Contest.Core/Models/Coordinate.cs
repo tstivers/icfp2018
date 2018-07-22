@@ -1,69 +1,66 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Contest.Core.Models
 {
-    public struct Coordinate
+    public class Coordinate
     {
         public Coordinate(byte x, byte y, byte z)
         {
-            this.x = x;
-            this.y = y;
-            this.z = z;
+            this.X = x;
+            this.Y = y;
+            this.Z = z;
         }
 
-        public byte x;
+        public readonly byte X;
 
-        public byte y;
+        public readonly byte Y;
 
-        public byte z;
+        public readonly byte Z;
 
         public static readonly Coordinate Zero = new Coordinate(0, 0, 0);
 
         public Coordinate Translate(CoordinateDifference d)
         {
-            return new Coordinate((byte)(x + d.x), (byte)(y + d.y), (byte)(z + d.z));
+            return new Coordinate((byte)(X + d.x), (byte)(Y + d.y), (byte)(Z + d.z));
         }
 
         public override string ToString()
         {
-            return $"<{x}, {y}, {z}>";
+            return $"<{X}, {Y}, {Z}>";
         }
 
         public int Mlen(Coordinate b)
         {
-            return Math.Abs(x - b.x) + Math.Abs(y - b.y) + Math.Abs(z - b.z);
+            return Math.Abs(X - b.X) + Math.Abs(Y - b.Y) + Math.Abs(Z - b.Z);
         }
 
         public CoordinateDifference GetDifference(Coordinate t)
         {
-            return new CoordinateDifference((sbyte)(x - t.x), (sbyte)(y - t.y), (sbyte)(z - t.z));
+            return new CoordinateDifference((sbyte)(X - t.X), (sbyte)(Y - t.Y), (sbyte)(Z - t.Z));
         }
 
         public override bool Equals(object obj)
         {
-            if (!(obj is Coordinate))
-            {
-                return false;
-            }
-
-            var coordinate = (Coordinate)obj;
-            return x == coordinate.x &&
-                   y == coordinate.y &&
-                   z == coordinate.z;
+            var coordinate = obj as Coordinate;
+            return coordinate != null &&
+                   X == coordinate.X &&
+                   Y == coordinate.Y &&
+                   Z == coordinate.Z;
         }
 
         public override int GetHashCode()
         {
-            var hashCode = 373119288;
-            hashCode = hashCode * -1521134295 + x.GetHashCode();
-            hashCode = hashCode * -1521134295 + y.GetHashCode();
-            hashCode = hashCode * -1521134295 + z.GetHashCode();
+            var hashCode = -307843816;
+            hashCode = hashCode * -1521134295 + X.GetHashCode();
+            hashCode = hashCode * -1521134295 + Y.GetHashCode();
+            hashCode = hashCode * -1521134295 + Z.GetHashCode();
             return hashCode;
         }
 
         public static bool operator ==(Coordinate coordinate1, Coordinate coordinate2)
         {
-            return coordinate1.Equals(coordinate2);
+            return EqualityComparer<Coordinate>.Default.Equals(coordinate1, coordinate2);
         }
 
         public static bool operator !=(Coordinate coordinate1, Coordinate coordinate2)

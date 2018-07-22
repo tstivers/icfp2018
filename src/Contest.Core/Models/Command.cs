@@ -28,7 +28,7 @@
         }
     }
 
-    public class CommandSmove : Command
+    public class CommandSmove : Command, IMoveCommand
     {
         public CoordinateDifference d { get; }
 
@@ -41,9 +41,14 @@
         {
             return $"SMove <{d.x}, {d.y}, {d.z}>";
         }
+
+        public Coordinate Destination(Coordinate start)
+        {
+            return start.Translate(d);
+        }
     }
 
-    public class CommandLmove : Command
+    public class CommandLmove : Command, IMoveCommand
     {
         public CoordinateDifference d1 { get; }
 
@@ -58,6 +63,11 @@
         public override string ToString()
         {
             return $"LMove <{d1.x}, {d1.y}, {d1.z}> <{d2.x}, {d2.y}, {d2.z}>";
+        }
+
+        public Coordinate Destination(Coordinate start)
+        {
+            return start.Translate(d1).Translate(d2);
         }
     }
 
@@ -101,5 +111,10 @@
         {
             return $"Void <{nd.x}, {nd.y}, {nd.z}>";
         }
+    }
+
+    public interface IMoveCommand
+    {
+        Coordinate Destination(Coordinate start);
     }
 }

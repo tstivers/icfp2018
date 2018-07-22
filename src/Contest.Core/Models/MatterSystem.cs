@@ -1,5 +1,6 @@
 ﻿using Contest.Core.Exceptions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,25 +11,15 @@ namespace Contest.Core.Models
         public bool Harmonics { get; set; }
         public Matrix Matrix { get; set; }
         public Dictionary<int, Bot> Bots { get; set; }
-        public int Energy { get; set; }
         public Trace Trace { get; set; }
 
-        public MatterSystem(byte resolution)
+        public MatterSystem(byte resolution, BitArray targetState, BitArray sourceState)
         {
             Harmonics = false; // low
-            Matrix = new Matrix(resolution);
-            var startBot = new Bot(1, Coordinate.Zero, Enumerable.Range(2, 20).ToList());
+            Matrix = new Matrix(resolution, targetState, sourceState);
+            var startBot = new Bot(1, Matrix.Get(0, 0, 0), Enumerable.Range(2, 40).ToList());
             Bots = new Dictionary<int, Bot>();
             Bots.Add(startBot.Bid, startBot);
-            Trace = new Trace();
-        }
-
-        public MatterSystem(MatterSystem parent)
-        {
-            Harmonics = parent.Harmonics;
-            Matrix = new Matrix(parent.Matrix);
-            Energy = parent.Energy;
-            Bots = parent.Bots.Values.ToDictionary(x => x.Bid, y => new Bot(y));
             Trace = new Trace();
         }
 
@@ -72,14 +63,6 @@ namespace Contest.Core.Models
                 throw new CommandException("smove", "not long linear difference");
 
             var c = bot.Position.Translate(d);
-
-            var mlen = Matrix.CalcSmove(bot.Position, c);
-
-            if (mlen <= 0)
-                throw new CommandException("smove", "invalid move");
-
-            bot.Position = c;
-            Energy += 2 * mlen;
         }
 
         public void CmdLmove(int bid, CoordinateDifference d1, CoordinateDifference d2)
@@ -92,14 +75,6 @@ namespace Contest.Core.Models
 
             var b = bot.Position.Translate(d1);
             var c = b.Translate(d2);
-
-            var mlen = Matrix.CalcLmove(bot.Position, b, c);
-
-            if (mlen <= 0)
-                throw new CommandException("lmove", "invalid move");
-
-            bot.Position = c;
-            Energy += 2 * (2 + mlen);
         }
 
         public void CmdFission(int bid, Coordinate c, int m)
@@ -120,14 +95,12 @@ namespace Contest.Core.Models
 
             var c = bot.Position.Translate(d);
 
-            if (Matrix.Get(c.x, c.y, c.z))
+            if (Matrix.Get(c.X, c.Y, c.Z).Filled)
             {
-                Energy += 6;
             }
             else
             {
-                Matrix.Set(c.x, c.y, c.z);
-                Energy += 12;
+                Matrix.Get(c.X, c.Y, c.Z).Filled = true;
             }
         }
 

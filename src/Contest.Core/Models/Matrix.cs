@@ -7,164 +7,216 @@ namespace Contest.Core.Models
 {
     public class Matrix
     {
-        public Matrix(byte resolution)
+        private static readonly IMoveCommand[] MoveCommands = GenerateMoveCommands().ToArray();
+
+        protected Matrix(byte resolution)
         {
-            _r = resolution;
-            Storage = new BitArray((int)Math.Pow(_r, 3));
+            Resolution = resolution;
+            Magnitude = (int)Math.Pow(Resolution, 3);
+            Res2 = (int)Math.Pow(Resolution, 2);
+            Storage = new Voxel[Magnitude];
+
+            for (byte x = 0; x < Resolution; x++)
+                for (byte y = 0; y < Resolution; y++)
+                    for (byte z = 0; z < Resolution; z++)
+                        Storage[x * Res2 + y * Resolution + z] = new Voxel(x, y, z);
+
+            CalculateRelationships();
         }
 
-        public Matrix(Matrix parent)
+        public Matrix(byte resolution, BitArray targetState, BitArray sourceState) : this(resolution)
         {
-            _r = parent.Resolution;
-            Storage = new BitArray(parent.Storage);
-        }
-
-        public Matrix(byte resolution, byte[] data)
-        {
-            _r = resolution;
-            Storage = new BitArray(data);
-        }
-
-        private readonly byte _r;
-
-        public byte Resolution => _r;
-
-        public readonly BitArray Storage;
-
-        public int Voxels
-        {
-            get
+            for (int i = 0; i < Magnitude; i++)
             {
-                int count = 0;
-                for (int x = 0; x < _r; x++)
-                    for (int y = 0; y < _r; y++)
-                        for (int z = 0; z < _r; z++)
-                            if (Get(x, y, z))
-                                count++;
+                if (targetState != null)
+                    Storage[i].Target = targetState[i];
 
-                return count;
+                if (sourceState != null)
+                    Storage[i].Filled = sourceState[i];
             }
         }
 
-        public void Set(int x, int y, int z)
+        public BitArray GetBitArray()
         {
-            Storage.Set(x * _r * _r + y * _r + z, true);
+            var array = new BitArray(Magnitude);
+            for (int i = 0; i < Magnitude; i++)
+                array[i] = Storage[i].Filled;
+            return array;
         }
 
-        public void Unset(byte x, byte y, byte z)
+        public readonly byte Resolution;
+        public readonly int Res2;
+        public int Magnitude;
+        public readonly Voxel[] Storage;
+
+        public Voxel Get(int x, int y, int z)
         {
-            Storage.Set(x * _r * _r + y * _r + z, false);
+            return Storage[x * Res2 + y * Resolution + z];
         }
 
-        public bool Get(int x, int y, int z)
+        public void CalculateRelationships()
         {
-            var index = x * _r * _r + y * _r + z;
-            return Storage.Get(index);
+            for (byte x = 0; x < Resolution; x++)
+                for (byte y = 0; y < Resolution; y++)
+                    for (byte z = 0; z < Resolution; z++)
+                    {
+                        var voxel = Get(x, y, z);
+                        CalculateAdjacent(voxel);
+                        CalculateNearby(voxel);
+                        voxel.Grounded = voxel.Nearby.Any(v => v.Filled);
+                    }
         }
 
-        public bool IsValidCoordinate(Coordinate c)
+        public void CalculateAdjacent(Voxel voxel)
         {
-            return c.x < _r && c.y < _r && c.z < _r;
+            var adjacent = new List<Voxel>();
+
+            if (voxel.X > 0)
+                adjacent.Add(Get(voxel.X - 1, voxel.Y, voxel.Z));
+
+            if (voxel.X < Resolution - 1)
+                adjacent.Add(Get(voxel.X + 1, voxel.Y, voxel.Z));
+
+            if (voxel.Y > 0)
+                adjacent.Add(Get(voxel.X, voxel.Y - 1, voxel.Z));
+
+            if (voxel.Y < Resolution - 1)
+                adjacent.Add(Get(voxel.X, voxel.Y + 1, voxel.Z));
+
+            if (voxel.Z > 0)
+                adjacent.Add(Get(voxel.X, voxel.Y, voxel.Z - 1));
+
+            if (voxel.Z < Resolution - 1)
+                adjacent.Add(Get(voxel.X, voxel.Y, voxel.Z + 1));
+
+            voxel.Adjacent = adjacent.ToArray();
         }
 
-        public bool ValidCoordinates(params Coordinate[] values)
+        public bool ValidCoord(int x, int y, int z)
         {
-            return values.All(IsValidCoordinate);
+            return x > 0 && x < Resolution && y > 0 && y < Resolution && z > 0 && z < Resolution;
         }
 
-        public List<Coordinate> GetValidNearbies(Coordinate start)
+        public void CalculateNearby(Voxel voxel)
         {
-            var l = new List<Coordinate>();
+            var nearby = new List<Voxel>();
 
-            foreach (var d in CoordinateDifference.NearDifferences)
+            for (sbyte x = -1; x <= 1; x++)
+                for (sbyte y = -1; y <= 1; y++)
+                    for (sbyte z = -1; z <= 1; z++)
+                    {
+                        var d = new CoordinateDifference(x, y, z);
+                        if (d.IsNear)
+                        {
+                            var c = voxel.Translate(d);
+                            if (ValidCoord(c.X, c.Y, c.Z))
+                                nearby.Add(Get(c.X, c.Y, c.Z));
+                        }
+                    }
+
+            voxel.Nearby = nearby.ToArray();
+        }
+
+        public void RefreshAllNodes()
+        {
+            for (byte x = 0; x < Resolution; x++)
+                for (byte y = 0; y < Resolution; y++)
+                    for (byte z = 0; z < Resolution; z++)
+                    {
+                        var voxel = Get(x, y, z);
+                        RefreshNode(voxel);
+                    }
+        }
+
+        private static IMoveCommand[] GenerateMoveCommands()
+        {
+            var list = new List<IMoveCommand>();
+
+            // generate all possible smoves
+            for (sbyte i = -15; i <= 15; i++)
             {
-                var c = start.Translate(d);
-                if (IsValidCoordinate(c) && !Get(c.x, c.y, c.z))
-                    l.Add(c);
+                if (i == 0)
+                    continue;
+
+                list.Add(new CommandSmove(new CoordinateDifference(i, 0, 0)));
+                list.Add(new CommandSmove(new CoordinateDifference(0, i, 0)));
+                list.Add(new CommandSmove(new CoordinateDifference(0, 0, i)));
             }
 
-            return l;
-        }
-
-        public int CalcSmove(Coordinate a, Coordinate b)
-        {
-            if (!ValidCoordinates(a, b))
-                return -2;
-
-            if (a.x == b.x && a.y == b.y) // z axis
-            {
-                for (int z = Math.Min(a.z, b.z); z <= Math.Max(a.z, b.z); z++)
+            // generate all possible lmoves
+            for (sbyte i = -5; i <= 5; i++)
+                for (sbyte j = -5; j <= 5; j++)
                 {
-                    if (Get(a.x, a.y, z))
-                        return -1;
+                    if (i == 0 || j == 0)
+                        continue;
+
+                    list.Add(new CommandLmove(new CoordinateDifference(i, 0, 0), new CoordinateDifference(j, 0, 0)));
+                    list.Add(new CommandLmove(new CoordinateDifference(0, i, 0), new CoordinateDifference(j, 0, 0)));
+                    list.Add(new CommandLmove(new CoordinateDifference(0, 0, i), new CoordinateDifference(j, 0, 0)));
+
+                    list.Add(new CommandLmove(new CoordinateDifference(i, 0, 0), new CoordinateDifference(0, j, 0)));
+                    list.Add(new CommandLmove(new CoordinateDifference(0, i, 0), new CoordinateDifference(0, j, 0)));
+                    list.Add(new CommandLmove(new CoordinateDifference(0, 0, i), new CoordinateDifference(0, j, 0)));
+
+                    list.Add(new CommandLmove(new CoordinateDifference(i, 0, 0), new CoordinateDifference(0, 0, j)));
+                    list.Add(new CommandLmove(new CoordinateDifference(0, i, 0), new CoordinateDifference(0, 0, j)));
+                    list.Add(new CommandLmove(new CoordinateDifference(0, 0, i), new CoordinateDifference(0, 0, j)));
                 }
 
-                return Math.Abs(a.z - b.z);
-            }
-
-            if (a.x == b.x && a.z == b.z) // y axis
-            {
-                for (int y = Math.Min(a.y, b.y); y <= Math.Max(a.y, b.y); y++)
-                {
-                    if (Get(a.x, y, a.z))
-                        return -1;
-                }
-
-                return Math.Abs(a.y - b.y);
-            }
-
-            if (a.y == b.y && a.z == b.z) // x axis
-            {
-                for (int x = Math.Min(a.x, b.x); x <= Math.Max(a.x, b.x); x++)
-                {
-                    if (Get(x, a.y, a.z))
-                        return -1;
-                }
-
-                return Math.Abs(a.x - b.x);
-            }
-
-            return 0; // not straight
+            return list.ToArray();
         }
 
-        public int CalcLmove(Coordinate a, Coordinate b, Coordinate c)
+        public void RefreshNode(Voxel voxel)
         {
-            var mlena = CalcSmove(a, b);
-            if (mlena <= 0)
-                return mlena;
+            if (voxel.Neighbors == null)
+            {
+                voxel.Neighbors = new List<Tuple<Voxel, IMoveCommand>>();
+                foreach (var cmd in MoveCommands)
+                {
+                    var c = cmd.Destination(voxel);
+                    if (!ValidCoord(c.X, c.Y, c.Z))
+                        continue;
 
-            var mlenb = CalcSmove(b, c);
-            if (mlenb <= 0)
-                return mlenb;
+                    voxel.Neighbors.Add(Tuple.Create(Get(c.X, c.Y, c.Z), cmd));
+                }
+            }
 
-            return mlena + mlenb;
+            if (voxel.Neighbors.Count == 0)
+                return;
+
+            if (voxel.Filled)
+            {
+                voxel.Neighbors.Clear();
+                return;
+            }
+
+            if (voxel.Adjacent.All(x => x.Filled))
+            {
+                voxel.Neighbors.Clear();
+                return;
+            }
+
+            var validMoves = new List<Tuple<Voxel, IMoveCommand>>();
+
+            // validate remaining commands
+            foreach (var kvp in voxel.Neighbors)
+            {
+                if (kvp.Item1.Filled)
+                    continue;
+
+                // validate move
+                if (!IsValidMove(voxel, kvp.Item2))
+                    continue;
+
+                validMoves.Add(kvp);
+            }
+
+            voxel.Neighbors = validMoves;
         }
 
-        // grounded if adjacent to an existing cell
-        public bool IsGrounded(Coordinate tc)
+        public bool IsValidMove(Coordinate start, IMoveCommand command)
         {
-            if (tc.y == 0)
-                return true;
-
-            if (tc.x > 0 && Get(tc.x - 1, tc.y, tc.z))
-                return true;
-
-            if (tc.x + 1 < Resolution && Get(tc.x + 1, tc.y, tc.z))
-                return true;
-
-            if (tc.y > 0 && Get(tc.x, tc.y - 1, tc.z))
-                return true;
-
-            if (tc.y + 1 < Resolution && Get(tc.x, tc.y + 1, tc.z))
-                return true;
-
-            if (tc.z > 0 && Get(tc.x, tc.y, tc.z - 1))
-                return true;
-
-            if (tc.z + 1 < Resolution && Get(tc.x, tc.y, tc.z + 1))
-                return true;
-
-            return false;
+            return true;
         }
     }
 }
