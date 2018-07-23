@@ -51,8 +51,7 @@ namespace Contest.Controllers
                 // move bot to a nearby if we're not there
                 if (MatterSystem.Bots[1].Position != moveTarget)
                 {
-                    var pf = new AstarMatrixPather(MatterSystem.Matrix);
-                    var route = pf.GetRouteTo(MatterSystem.Bots[1].Position, moveTarget);
+                    var route = AstarMatrixPather.GetRouteTo(MatterSystem.Bots[1].Position, moveTarget);
 
                     MatterSystem.ExecuteCommands(CommandOptimizer.Compress(route));
                 }
@@ -63,7 +62,7 @@ namespace Contest.Controllers
                 // remove it from targets
                 RemainingVoxels.Remove(targetVoxel);
 
-                int complete = (int)(100 - ((float)RemainingVoxels.Count / startCount * 100));
+                var complete = (int)(100 - ((float)RemainingVoxels.Count / startCount * 100));
                 if (complete != lastCompletePercent)
                 {
                     lastCompletePercent = complete;
@@ -72,8 +71,7 @@ namespace Contest.Controllers
             }
 
             // move to home
-            var pathFinder = new AstarMatrixPather(MatterSystem.Matrix);
-            var homeRoute = pathFinder.GetRouteTo(MatterSystem.Bots[1].Position, MatterSystem.Matrix.Get(0, 0, 0));
+            var homeRoute = AstarMatrixPather.GetRouteTo(MatterSystem.Bots[1].Position, MatterSystem.Matrix.Get(0, 0, 0));
 
             if (homeRoute == null)
             {

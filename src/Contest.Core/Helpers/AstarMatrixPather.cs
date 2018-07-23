@@ -1,44 +1,30 @@
-﻿using C5;
-using Contest.Core.Models;
+﻿using Contest.Core.Models;
+using Priority_Queue;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
 namespace Contest.Controllers
 {
-    public class AstarMatrixPather
+    public static class AstarMatrixPather
     {
-        private readonly Matrix _matrix;
-
         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private readonly System.Collections.Generic.HashSet<Voxel> _unreachable =
-            new System.Collections.Generic.HashSet<Voxel>();
-
-        public AstarMatrixPather(Matrix matrix)
-        {
-            _matrix = matrix;
-        }
-
-        public List<Command> GetRouteTo(Voxel start, Voxel goal)
+        public static List<Command> GetRouteTo(Voxel start, Voxel goal)
         {
             var sw = Stopwatch.StartNew();
 
-            var closed_set = new System.Collections.Generic.HashSet<Voxel>();
-            var came_from = new Dictionary<Voxel, Voxel>();
+            var open_set = new SimplePriorityQueue<Voxel>();
+            var closed_set = new HashSet<Voxel>();
             var g_score = new Dictionary<Voxel, float> { { start, 0 } };
-            var f_score = new Dictionary<Voxel, float> { { start, GetGScore(start, goal) } };
-            var current = start;
+            var f_score = new Dictionary<Voxel, float> { { start, heuristic_cost_estimate(start, goal) } };
+            var came_from = new Dictionary<Voxel, Voxel>();
 
-            IPriorityQueue<Voxel> open_set = new IntervalHeap<Voxel>(new VoxelScoreComparer(f_score)) { start };
-            var open_set_hash = new System.Collections.Generic.HashSet<Coordinate>();
+            open_set.Enqueue(start, float.MaxValue);
 
-            if (_unreachable.Contains(goal))
-                return null;
-
-            while (!open_set.IsEmpty)
+            while (open_set.Count > 0)
             {
-                current = open_set.DeleteMin();
+                var current = open_set.Dequeue();
 
                 if (current == goal)
                 {
@@ -48,8 +34,8 @@ namespace Contest.Controllers
                 }
 
                 closed_set.Add(current);
-                came_from.TryGetValue(current, out var prev);
 
+                came_from.TryGetValue(current, out var prev);
                 var offset = prev == null ? new[] { 0, 0, 0 } : new[] { current.X - prev.X, current.Y - prev.Y, current.Z - prev.Z };
 
                 foreach (var neighbor in AdjacentVoxels(current))
@@ -57,30 +43,17 @@ namespace Contest.Controllers
                     if (closed_set.Contains(neighbor))
                         continue;
 
-                    var tentative_g_score = g_score[current] + GetFScore(current, neighbor, offset);
+                    var tentative_g_score = g_score[current] + dist_between(current, neighbor, offset);
 
-                    if (!open_set_hash.Contains(neighbor) || tentative_g_score < g_score[neighbor])
-                    {
-                        g_score[neighbor] = tentative_g_score;
-                        f_score[neighbor] = g_score[neighbor] + GetGScore(neighbor, goal);
-                        open_set.Add(neighbor);
-                        open_set_hash.Add(neighbor);
-                        came_from[neighbor] = current;
-                    }
-                }
-            }
+                    if (!open_set.Contains(neighbor))
+                        open_set.Enqueue(neighbor, float.MaxValue);
+                    else if (tentative_g_score >= g_score[neighbor])
+                        continue;
 
-            // fill out our unreachable points
-            for (byte x = 0; x < _matrix.Resolution; x++)
-            {
-                for (byte y = 0; y < _matrix.Resolution; y++)
-                {
-                    for (byte z = 0; z < _matrix.Resolution; z++)
-                    {
-                        var v = _matrix.Get(x, y, z);
-                        if (!closed_set.Contains(v))
-                            _unreachable.Add(v);
-                    }
+                    came_from[neighbor] = current;
+                    g_score[neighbor] = tentative_g_score;
+                    f_score[neighbor] = g_score[neighbor] + heuristic_cost_estimate(neighbor, goal);
+                    open_set.UpdatePriority(neighbor, f_score[neighbor]);
                 }
             }
 
@@ -90,7 +63,7 @@ namespace Contest.Controllers
             return null;
         }
 
-        private float GetFScore(Voxel current, Voxel neighbor, int[] offset)
+        private static float dist_between(Voxel current, Voxel neighbor, int[] offset)
         {
             if (current.X + offset[0] == neighbor.X &&
                 current.Y + offset[1] == neighbor.Y &&
@@ -100,7 +73,17 @@ namespace Contest.Controllers
             return 1;
         }
 
-        private List<Command> ReconstructPath(Dictionary<Voxel, Voxel> came_from, Voxel start, Voxel current)
+        private static float heuristic_cost_estimate(Voxel neighbor, Voxel goal)
+        {
+            return neighbor.Mlen(goal);
+        }
+
+        public static IEnumerable<Voxel> AdjacentVoxels(Voxel origin)
+        {
+            return origin.Adjacent.Where(x => !x.Filled && !x.Volatile);
+        }
+
+        private static List<Command> ReconstructPath(Dictionary<Voxel, Voxel> came_from, Voxel start, Voxel current)
         {
             List<Command> commands = new List<Command>();
 
@@ -115,31 +98,6 @@ namespace Contest.Controllers
             commands.Reverse();
 
             return commands;
-        }
-
-        public IEnumerable<Voxel> AdjacentVoxels(Voxel origin)
-        {
-            return origin.Adjacent.Where(x => !x.Filled && !x.Volatile);
-        }
-
-        private float GetGScore(Coordinate start, Coordinate goal)
-        {
-            return start.Mlen(goal);
-        }
-
-        private class VoxelScoreComparer : IComparer<Voxel>
-        {
-            private readonly Dictionary<Voxel, float> _f_scores;
-
-            public VoxelScoreComparer(Dictionary<Voxel, float> f_scores)
-            {
-                _f_scores = f_scores;
-            }
-
-            public int Compare(Voxel x, Voxel y)
-            {
-                return _f_scores[x].CompareTo(_f_scores[y]);
-            }
         }
     }
 }

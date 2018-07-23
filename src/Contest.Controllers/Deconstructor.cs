@@ -1,7 +1,7 @@
 ﻿using Contest.Core.Models;
 using Contest.Core.Octree;
+using System.Collections.Generic;
 using System.Linq;
-using C5;
 
 namespace Contest.Controllers
 {
@@ -18,6 +18,7 @@ namespace Contest.Controllers
         }
 
         public VoxelOctree Octree;
+        public List<HashSet<Voxel>> Trunks = new List<HashSet<Voxel>>();
 
         public override void ToggleVoxel(Voxel targetVoxel)
         {
@@ -35,8 +36,8 @@ namespace Contest.Controllers
             }
 
             var pos = MatterSystem.Bots[1].Position;
-            var pathFinder = new AstarMatrixPather(MatterSystem.Matrix);
             var ungrounded = new HashSet<Voxel>();
+            var grounded = new HashSet<Voxel>();
 
             // check nearbies
             foreach (var v in pos.Nearby.Where(x => x.Filled))
@@ -59,11 +60,13 @@ namespace Contest.Controllers
 
                 foreach (var v in target)
                 {
-                    if (MatterSystem.Matrix.WillUnground(v))
+                    if (!grounded.Contains(v) && MatterSystem.Matrix.WillUnground(v))
                     {
                         ungrounded.Add(v);
                         continue;
                     }
+
+                    grounded.Add(v);
 
                     // see if we can navigate to this
                     var moveTargets = v.Nearby
@@ -74,7 +77,7 @@ namespace Contest.Controllers
 
                     foreach (var mt in moveTargets)
                     {
-                        if (pathFinder.GetRouteTo(pos, mt) == null)
+                        if (AstarMatrixPather.GetRouteTo(pos, mt) == null)
                             continue;
 
                         return (v, mt);

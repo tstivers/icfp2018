@@ -1,4 +1,5 @@
-﻿using Contest.Core.Models;
+﻿using System.Collections.Generic;
+using Contest.Core.Models;
 using Contest.Core.Octree;
 using System.Linq;
 
@@ -32,15 +33,15 @@ namespace Contest.Controllers
             }
 
             var pos = MatterSystem.Bots[1].Position;
-            var pathFinder = new AstarMatrixPather(MatterSystem.Matrix);
+            HashSet<Voxel> unreachable = new HashSet<Voxel>();
 
             for (var i = 4; i < MatterSystem.Matrix.Resolution; i++)
             {
                 var target = Octree.GetNearby(pos, i)
+                    .Where(x => !unreachable.Contains(x))
                     .Where(x => x.Grounded)
                     .OrderBy(x => x.Y)
                     .ThenBy(x => x.dv(pos));
-
 
                 foreach (var v in target)
                 {
@@ -53,11 +54,13 @@ namespace Contest.Controllers
 
                     foreach (var mt in moveTargets)
                     {
-                        if (pathFinder.GetRouteTo(pos, mt) == null)
+                        if (AstarMatrixPather.GetRouteTo(pos, mt) == null)
                             continue;
 
                         return (v, mt);
                     }
+
+                    unreachable.Add(v);
                 }
             }
 

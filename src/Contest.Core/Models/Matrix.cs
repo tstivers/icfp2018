@@ -13,7 +13,6 @@ namespace Contest.Core.Models
         {
             Resolution = resolution;
             Magnitude = (int)Math.Pow(Resolution, 3);
-            OpenSet = new FastPriorityQueue<Voxel>(Magnitude);
             Res2 = (int)Math.Pow(Resolution, 2);
             Storage = new Voxel[Magnitude];
 
@@ -49,7 +48,6 @@ namespace Contest.Core.Models
         public readonly int Res2;
         public int Magnitude;
         public readonly Voxel[] Storage;
-        public FastPriorityQueue<Voxel> OpenSet;
 
         public Voxel Get(int x, int y, int z)
         {

@@ -3,7 +3,7 @@ using System;
 
 namespace Contest.Core.Models
 {
-    public abstract class Coordinate : FastPriorityQueueNode
+    public abstract class Coordinate
     {
         public Coordinate(byte x, byte y, byte z)
         {

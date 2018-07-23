@@ -4,23 +4,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Contest.Core;
 using Contest.Core.Models;
 
 namespace Contest.Controllers
 {
     public class Reassembler
     {
+        private string _sourceFile;
+        private string _targetFile;
+
         public Reassembler(string targetFile, string sourceFile)
         {
-            var targetData = (targetFile != null ? MdlFile.LoadModel(targetFile) : ((byte, BitArray)?)null);
-
-            // load source
-            var sourceData = (sourceFile != null ? MdlFile.LoadModel(sourceFile) : ((byte, BitArray)?)null);
+            _targetFile = targetFile;
+            _sourceFile = sourceFile;
         }
 
         public void Solve(string outputFile)
         {
-
+            var d = new Deconstructor(_sourceFile);
+            d.Solve(null);
+            
+            var a = new Assembler(_targetFile);
+            a.MatterSystem.Trace = d.MatterSystem.Trace;
+            a.Solve(outputFile);
         }
     }
 }

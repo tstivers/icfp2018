@@ -13,9 +13,7 @@ namespace Contest.Core.Tests
         {
             var m = new Matrix(20, null, null);
 
-            var pather = new AstarMatrixPather(m);
-
-            var path = pather.GetRouteTo(m.Get(19, 19, 19), m.Get(0, 0, 0));
+            var path = AstarMatrixPather.GetRouteTo(m.Get(19, 19, 19), m.Get(0, 0, 0));
 
             Assert.That(path.Count, Is.GreaterThan(0));
 
