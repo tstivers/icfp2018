@@ -28,7 +28,7 @@ namespace Contest.Core.Models
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("wait", "bot does not exist");
 
-            if (bot.Position != Coordinate.Zero)
+            if (bot.Position != Matrix.Get(0, 0, 0))
                 throw new CommandException("halt", "bot not at 0,0,0");
 
             if (Bots.Count > 1)
@@ -59,7 +59,7 @@ namespace Contest.Core.Models
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("smove", "bot does not exist");
 
-            bot.Position = Matrix.Get(bot.Position.X + d.x, bot.Position.Y + d.y, bot.Position.Z + d.z);
+            bot.Position = Matrix.Get(bot.Position.X + d.X, bot.Position.Y + d.Y, bot.Position.Z + d.Z);
         }
 
         public void CmdLmove(int bid, CoordinateDifference d1, CoordinateDifference d2)
@@ -67,7 +67,7 @@ namespace Contest.Core.Models
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("lmove", "bot does not exist");
 
-            bot.Position = Matrix.Get(bot.Position.X + d1.x + d2.x, bot.Position.Y + d1.y + d2.y, bot.Position.Z + d1.z + d2.z);
+            bot.Position = Matrix.Get(bot.Position.X + d1.X + d2.X, bot.Position.Y + d1.Y + d2.Y, bot.Position.Z + d1.Z + d2.Z);
         }
 
         public void CmdFission(int bid, Coordinate c, int m)
@@ -83,7 +83,7 @@ namespace Contest.Core.Models
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("fill", "bot does not exist");
 
-            Matrix.Get(bot.Position.X + d.x, bot.Position.Y + d.y, bot.Position.Z + d.z).Filled = true;
+            Matrix.Get(bot.Position.X + d.X, bot.Position.Y + d.Y, bot.Position.Z + d.Z).Filled = true;
         }
 
         public void CmdVoid(int bid, CoordinateDifference d)
@@ -91,7 +91,7 @@ namespace Contest.Core.Models
             if (!Bots.TryGetValue(bid, out var bot))
                 throw new CommandException("void", "bot does not exist");
 
-            Matrix.Get(bot.Position.X + d.x, bot.Position.Y + d.y, bot.Position.Z + d.z).Filled = false;
+            Matrix.Get(bot.Position.X + d.X, bot.Position.Y + d.Y, bot.Position.Z + d.Z).Filled = false;
         }
 
         public void ExecuteCommand(int bid, Command c)

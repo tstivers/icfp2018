@@ -8,123 +8,91 @@ using System.Linq;
 
 namespace Contest.Controllers
 {
-    public class Solver
+    public abstract class Solver
     {
-        private static readonly log4net.ILog Log =
-            log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public void Solve(string targetFile, string sourceFile, string outputFile)
+        public MatterSystem MatterSystem { get; set; }
+        public string Name { get; set; }
+        public List<Voxel> RemainingVoxels { get; set; }
+
+        public Solver(string targetFile, string sourceFile)
         {
-            Log.Debug($"{Path.GetFileNameWithoutExtension(outputFile)} Starting solution");
-
-            var isDecompiling = sourceFile != null && targetFile == null;
-
-            // load target
             var targetData = (targetFile != null ? MdlFile.LoadModel(targetFile) : ((byte, BitArray)?)null);
 
             // load source
             var sourceData = (sourceFile != null ? MdlFile.LoadModel(sourceFile) : ((byte, BitArray)?)null);
 
             // create system
-            var system = new MatterSystem(targetData?.Item1 ?? sourceData?.Item1 ?? 0, targetData?.Item2, sourceData?.Item2);
+            MatterSystem = new MatterSystem(targetData?.Item1 ?? sourceData?.Item1 ?? 0, targetData?.Item2, sourceData?.Item2);
+        }
 
-            Log.Info($"{Path.GetFileNameWithoutExtension(outputFile)} Created system");
+        public Solver(byte resolution)
+        {
+            MatterSystem = new MatterSystem(resolution, null, null);
+        }
+
+        public void Solve(string outputFile)
+        {
+            Name = Path.GetFileNameWithoutExtension(outputFile);
 
             // get all the target voxels
-            var targets = system.Matrix.Storage.Where(x => x.Filled != x.Target).ToList();
-            var startCount = targets.Count;
-            int lastComplete = 0;
+            RemainingVoxels = MatterSystem.Matrix.Storage.Where(x => x.Filled != x.Target).ToList();
+            var lastCompletePercent = 0;
+            var startCount = RemainingVoxels.Count;
 
-            Log.Info($"{Path.GetFileNameWithoutExtension(outputFile)} Total targets: {targets.Count:N0}");
+            Log.Info($"{Name} Total targets: {RemainingVoxels.Count:N0}");
 
-            while (targets.Count != 0)
+            while (RemainingVoxels.Count > 0)
             {
-                IEnumerable<Voxel> targetVoxels;
-
-                if (!isDecompiling)
-                {
-                    // pick the lowest closest target with the most changes to fill
-                    targetVoxels = targets.Where(x => x.Grounded)
-                        .OrderBy(x => x.Y)
-                        .ThenByDescending(x => x.Nearby.Count(y => y.Filled != y.Target && y.Grounded))
-                        .ThenBy(x => x.Mlen(system.Bots[1].Position));
-                }
-                else
-                {
-                    // pick the highest closest target with the most changes to void that doesn't unground anything
-                    targetVoxels = targets.Where(x => x.Grounded)
-                        .OrderByDescending(x => x.Y)
-                        .ThenBy(x => x.Mlen(system.Bots[1].Position))
-                        .Where(x => !system.Matrix.WillUnground(x));
-                }
-
-                var targetVoxel = targetVoxels.FirstOrDefault();
+                var (targetVoxel, moveTarget) = ChooseNextTarget();
 
                 // move bot to a nearby if we're not there
-                if (!system.Bots[1].Position.Nearby.Contains(targetVoxel))
+                if (MatterSystem.Bots[1].Position != moveTarget)
                 {
-                    // get a path to the nearest nearby
-                    var pf = new AstarMatrixPather(system.Matrix);
-                    List<Command> route = null;
+                    var pf = new AstarMatrixPather(MatterSystem.Matrix);
+                    var route = pf.GetRouteTo(MatterSystem.Bots[1].Position, moveTarget);
 
-                    foreach (var nb in targetVoxel.Nearby
-                        .Where(x => !x.Filled)
-                        .OrderByDescending(x => x.Y) // fill/void from the highest point
-                        .ThenByDescending(x => x.Nearby.Count(y => y.Filled != y.Target && y.Grounded))
-                        .ThenBy(x => x.Mlen(system.Bots[1].Position)))
-                    {
-                        var potentialRoute = pf.GetRouteTo(system.Bots[1].Position, nb);
-                        if (potentialRoute.commands != null)
-                            route = potentialRoute.commands;
-                        break;
-                    }
-
-                    if (route == null)
-                    {
-                        TraceFile.WriteTraceFile(outputFile + ".failed", system.Trace);
-                        Log.Error($"{Path.GetFileNameWithoutExtension(outputFile)} Failed with {targets.Count:N0} targets left");
-                        return;
-                    }
-
-                    system.ExecuteCommands(CommandOptimizer.Compress(route));
+                    MatterSystem.ExecuteCommands(CommandOptimizer.Compress(route));
                 }
 
                 // fill/void it
-                if (!isDecompiling)
-                    system.ExecuteCommand(1, new CommandFill(system.Bots[1].Position.Offset(targetVoxel)));
-                else
-                    system.ExecuteCommand(1, new CommandVoid(system.Bots[1].Position.Offset(targetVoxel)));
+                ToggleVoxel(targetVoxel);
 
                 // remove it from targets
-                targets.Remove(targetVoxel);
+                RemainingVoxels.Remove(targetVoxel);
 
-                int complete = (int)(100 - ((float)targets.Count / startCount * 100));
-                if (complete != lastComplete)
+                int complete = (int)(100 - ((float)RemainingVoxels.Count / startCount * 100));
+                if (complete != lastCompletePercent)
                 {
-                    lastComplete = complete;
-                    Log.Info($"{Path.GetFileNameWithoutExtension(outputFile)} {complete:N0}% complete ({targets.Count:N0} remaining)");
+                    lastCompletePercent = complete;
+                    Log.Info($"{Name} {complete:N0}% complete ({RemainingVoxels.Count:N0} remaining)");
                 }
             }
 
             // move to home
-            var pathFinder = new AstarMatrixPather(system.Matrix);
-            var (_, homeRoute) = pathFinder.GetRouteTo(system.Bots[1].Position, system.Matrix.Get(0, 0, 0));
+            var pathFinder = new AstarMatrixPather(MatterSystem.Matrix);
+            var homeRoute = pathFinder.GetRouteTo(MatterSystem.Bots[1].Position, MatterSystem.Matrix.Get(0, 0, 0));
 
             if (homeRoute == null)
             {
-                TraceFile.WriteTraceFile(outputFile + ".failed", system.Trace);
-                Log.Error($"{Path.GetFileNameWithoutExtension(outputFile)} Failed with {targets.Count:N0} targets left");
+                TraceFile.WriteTraceFile(outputFile + ".failed", MatterSystem.Trace);
+                Log.Error($"{Path.GetFileNameWithoutExtension(outputFile)} Failed with {RemainingVoxels.Count:N0} targets left");
                 return;
             }
 
-            system.ExecuteCommands(CommandOptimizer.Compress(homeRoute));
+            MatterSystem.ExecuteCommands(CommandOptimizer.Compress(homeRoute));
 
             // halt
-            system.ExecuteCommand(1, new CommandHalt());
+            MatterSystem.ExecuteCommand(1, new CommandHalt());
 
-            TraceFile.WriteTraceFile(outputFile, system.Trace);
+            TraceFile.WriteTraceFile(outputFile, MatterSystem.Trace);
 
             Log.Debug($"{Path.GetFileNameWithoutExtension(outputFile)} Finished solution ");
         }
+
+        public abstract void ToggleVoxel(Voxel targetVoxel);
+
+        public abstract (Voxel target, Voxel moveTarget) ChooseNextTarget();
     }
 }

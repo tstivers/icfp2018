@@ -5,41 +5,27 @@ namespace Contest.Core.Models
 {
     public class CoordinateDifference
     {
-        private readonly sbyte[] _p = new sbyte[3];
-
         public CoordinateDifference(sbyte x, sbyte y, sbyte z)
         {
-            _p[0] = x;
-            _p[1] = y;
-            _p[2] = z;
+            X = x;
+            Y = y;
+            Z = z;
         }
 
         public override string ToString()
         {
-            return $"{{{x}, {y}, {z}}}";
+            return $"{{{X}, {Y}, {Z}}}";
         }
 
-        public sbyte x => _p[0];
+        public sbyte X;
+        public sbyte Y;
+        public sbyte Z;
 
-        public sbyte y => _p[1];
-
-        public sbyte z => _p[2];
-
-        public int mlen => Math.Abs(x) + Math.Abs(y) + Math.Abs(z);
-        public int clen => Math.Max(Math.Max(Math.Abs(x), Math.Abs(y)), Math.Abs(z));
-        public int len => Math.Abs(x + y + z);
-
-        public bool IsShortLinear => x == 0 && y == 0 && Math.Abs(z) <= 5 ||
-                                     x == 0 && z == 0 && Math.Abs(y) <= 5 ||
-                                     y == 0 && z == 0 && Math.Abs(x) <= 5;
-
-        public bool IsLongLinear => x == 0 && y == 0 && Math.Abs(z) <= 15 ||
-                                    x == 0 && z == 0 && Math.Abs(y) <= 15 ||
-                                    y == 0 && z == 0 && Math.Abs(x) <= 15;
-
+        public int mlen => Math.Abs(X) + Math.Abs(Y) + Math.Abs(Z);
+        public int clen => Math.Max(Math.Max(Math.Abs(X), Math.Abs(Y)), Math.Abs(Z));
         public bool IsNear => mlen <= 2 && clen == 1;
 
-        public byte Direction => x == 0 ? y == 0 ? (byte)0b11 : (byte)0b10 : (byte)0b01;
+        public byte Direction => X == 0 ? Y == 0 ? (byte)0b11 : (byte)0b10 : (byte)0b01;
 
         public static readonly CoordinateDifference[] NearDifferences = GenerateNearDistances();
 
@@ -57,34 +43,6 @@ namespace Contest.Core.Models
                     }
 
             return nearDistances.ToArray();
-        }
-
-        private static readonly sbyte[] _posX = { 1, 0, 0 };
-        private static readonly sbyte[] _posY = { 0, 1, 0 };
-        private static readonly sbyte[] _posZ = { 0, 0, 1 };
-        private static readonly sbyte[] _negX = { -1, 0, 0 };
-        private static readonly sbyte[] _negY = { 0, -1, 0 };
-        private static readonly sbyte[] _negZ = { 0, 0, -1 };
-
-        public sbyte[] Offset
-        {
-            get
-            {
-                if (x > 0)
-                    return _posX;
-                if (x < 0)
-                    return _negX;
-                if (y > 0)
-                    return _posY;
-                if (y < 0)
-                    return _negY;
-                if (z > 0)
-                    return _posZ;
-                if (z < 0)
-                    return _negZ;
-
-                throw new ArgumentException();
-            }
         }
     }
 }

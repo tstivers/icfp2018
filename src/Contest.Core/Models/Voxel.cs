@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Contest.Core.Models
+﻿namespace Contest.Core.Models
 {
     public class Voxel : Coordinate
     {
@@ -30,17 +27,11 @@ namespace Contest.Core.Models
 
         public Voxel[] Adjacent;
         public Voxel[] Nearby;
-        public List<Tuple<Voxel, IMoveCommand>> Neighbors;
 
         public Voxel(byte x, byte y, byte z) : base(x, y, z)
         {
             if (y == 0)
                 Grounded = true;
-        }
-
-        public CoordinateDifference Offset(Voxel targetVoxel)
-        {
-            return new CoordinateDifference((sbyte)(targetVoxel.X - this.X), (sbyte)(targetVoxel.Y - this.Y), (sbyte)(targetVoxel.Z - this.Z));
         }
     }
 }

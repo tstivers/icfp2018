@@ -132,7 +132,7 @@ namespace Contest.Core
 
             foreach (var d in CoordinateDifference.NearDifferences)
             {
-                byte coded = (byte)((d.x + 1) * 9 + (d.y + 1) * 3 + (d.z + 1));
+                byte coded = (byte)((d.X + 1) * 9 + (d.Y + 1) * 3 + (d.Z + 1));
 
                 lookup.Add(coded, d);
             }
@@ -163,13 +163,13 @@ namespace Contest.Core
 
                 if (c is CommandFill cf)
                 {
-                    byte coded = (byte)((cf.nd.x + 1) * 9 + (cf.nd.y + 1) * 3 + (cf.nd.z + 1));
+                    byte coded = (byte)((cf.nd.X + 1) * 9 + (cf.nd.Y + 1) * 3 + (cf.nd.Z + 1));
                     bytes.Add((byte)((coded << 3) | 0b011));
                 }
 
                 if (c is CommandVoid cv)
                 {
-                    byte coded = (byte)((cv.nd.x + 1) * 9 + (cv.nd.y + 1) * 3 + (cv.nd.z + 1));
+                    byte coded = (byte)((cv.nd.X + 1) * 9 + (cv.nd.Y + 1) * 3 + (cv.nd.Z + 1));
                     bytes.Add((byte)((coded << 3) | 0b010));
                 }
 
@@ -178,36 +178,36 @@ namespace Contest.Core
                     byte a = 0;
                     byte b = 0;
 
-                    if (lmove.d1.x != 0)
+                    if (lmove.d1.X != 0)
                     {
                         a = 0b00011100;
-                        b = (byte)(lmove.d1.x + 5);
+                        b = (byte)(lmove.d1.X + 5);
                     }
-                    else if (lmove.d1.y != 0)
+                    else if (lmove.d1.Y != 0)
                     {
                         a = 0b00101100;
-                        b = (byte)(lmove.d1.y + 5);
+                        b = (byte)(lmove.d1.Y + 5);
                     }
                     else
                     {
                         a = 0b00111100;
-                        b = (byte)(lmove.d1.z + 5);
+                        b = (byte)(lmove.d1.Z + 5);
                     }
 
-                    if (lmove.d2.x != 0)
+                    if (lmove.d2.X != 0)
                     {
                         a = (byte)(a | 0b01000000);
-                        b = (byte)(b | (lmove.d2.x + 5) << 4);
+                        b = (byte)(b | (lmove.d2.X + 5) << 4);
                     }
-                    else if (lmove.d2.y != 0)
+                    else if (lmove.d2.Y != 0)
                     {
                         a = (byte)(a | 0b10000000);
-                        b = (byte)(b | (lmove.d2.y + 5) << 4);
+                        b = (byte)(b | (lmove.d2.Y + 5) << 4);
                     }
                     else
                     {
                         a = (byte)(a | 0b11000000);
-                        b = (byte)(b | (lmove.d2.z + 5) << 4);
+                        b = (byte)(b | (lmove.d2.Z + 5) << 4);
                     }
 
                     bytes.Add(a);
@@ -219,20 +219,20 @@ namespace Contest.Core
                     byte a = 0;
                     byte b = 0;
 
-                    if (smove.d.x != 0)
+                    if (smove.d.X != 0)
                     {
                         a = 0b00010100;
-                        b = (byte)(smove.d.x + 15);
+                        b = (byte)(smove.d.X + 15);
                     }
-                    else if (smove.d.y != 0)
+                    else if (smove.d.Y != 0)
                     {
                         a = 0b00100100;
-                        b = (byte)(smove.d.y + 15);
+                        b = (byte)(smove.d.Y + 15);
                     }
                     else
                     {
                         a = 0b00110100;
-                        b = (byte)(smove.d.z + 15);
+                        b = (byte)(smove.d.Z + 15);
                     }
 
                     bytes.Add(a);

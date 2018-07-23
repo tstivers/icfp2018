@@ -1,8 +1,8 @@
-﻿using C5;
-using Contest.Core.Models;
+﻿using Contest.Core.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Priority_Queue;
 
 namespace Contest.Core.Helpers
 {
@@ -14,17 +14,17 @@ namespace Contest.Core.Helpers
         {
             var sw = Stopwatch.StartNew();
 
-            var closed_set = new System.Collections.Generic.HashSet<Voxel>();
+            var goal = map.Get(map.Resolution / 2, 0, map.Resolution / 2);
+            var closed_set = new HashSet<Voxel>();
             var g_score = new Dictionary<Voxel, float> { { start, 0 } };
-            var f_score = new Dictionary<Voxel, float> { { start, start.Y } };
-            var current = start;
+            var f_score = new Dictionary<Voxel, float> { { start,  goal.Mlen(start)} };
 
-            IPriorityQueue<Voxel> open_set = new IntervalHeap<Voxel>(new VoxelScoreComparer(f_score)) { start };
-            var open_set_hash = new System.Collections.Generic.HashSet<Coordinate>();
+            map.OpenSet.Clear();
+            map.OpenSet.Enqueue(start, 0);
 
-            while (!open_set.IsEmpty)
+            while (map.OpenSet.Count > 0)
             {
-                current = open_set.DeleteMin();
+                var current = map.OpenSet.Dequeue();
 
                 if (current.Y == 0)
                 {
@@ -35,20 +35,26 @@ namespace Contest.Core.Helpers
 
                 closed_set.Add(current);
 
-                foreach (var neighbor in AdjacentFilledVoxels(current, avoid))
+                var adjacent = AdjacentFilledVoxels(current, avoid);
+
+                foreach (var neighbor in adjacent)
                 {
                     if (closed_set.Contains(neighbor))
                         continue;
 
-                    var tentative_g_score = g_score[current] + 1;
+                    var tentative_g_score = g_score[current] + neighbor.Y < current.Y ? 0.5f : 1;
 
-                    if (!open_set_hash.Contains(neighbor) || tentative_g_score < g_score[neighbor])
+                    if (!map.OpenSet.Contains(neighbor) || tentative_g_score <= g_score[neighbor])
                     {
                         g_score[neighbor] = tentative_g_score;
-                        f_score[neighbor] = g_score[neighbor] + neighbor.Y;
-                        open_set.Add(neighbor);
-                        open_set_hash.Add(neighbor);
+                        f_score[neighbor] = g_score[neighbor] + goal.Mlen(neighbor);
+
+                        if(map.OpenSet.Contains(neighbor))
+                            map.OpenSet.UpdatePriority(neighbor, f_score[neighbor]);
+                        else
+                            map.OpenSet.Enqueue(neighbor, f_score[neighbor]);
                     }
+
                 }
             }
 
@@ -61,21 +67,6 @@ namespace Contest.Core.Helpers
         public static IEnumerable<Voxel> AdjacentFilledVoxels(Voxel origin, Voxel avoid)
         {
             return origin.Adjacent.Where(x => x.Filled && x != avoid);
-        }
-
-        private class VoxelScoreComparer : IComparer<Voxel>
-        {
-            private readonly Dictionary<Voxel, float> _f_scores;
-
-            public VoxelScoreComparer(Dictionary<Voxel, float> f_scores)
-            {
-                _f_scores = f_scores;
-            }
-
-            public int Compare(Voxel x, Voxel y)
-            {
-                return _f_scores[x].CompareTo(_f_scores[y]);
-            }
         }
     }
 }

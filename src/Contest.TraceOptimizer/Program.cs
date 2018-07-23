@@ -41,9 +41,6 @@ namespace Contest.TraceOptimizer
             var trace = TraceFile.LoadTraceFile(inputfile);
             var target = TraceFile.LoadTraceFile(outputfile);
 
-            int startCount = trace.Commands.Count;
-            int count = 0;
-
             trace.Commands = CommandOptimizer.Compress(trace.Commands);
 
             if (target.Commands.Count != trace.Commands.Count)

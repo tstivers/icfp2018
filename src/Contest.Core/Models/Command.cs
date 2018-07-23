@@ -39,12 +39,12 @@
 
         public override string ToString()
         {
-            return $"SMove <{d.x}, {d.y}, {d.z}>";
+            return $"SMove <{d.X}, {d.Y}, {d.Z}>";
         }
 
-        public Coordinate Destination(Coordinate start)
+        public Voxel Destination(Voxel start, Matrix matrix)
         {
-            return start.Translate(d);
+            return matrix.Translate(start, d);
         }
     }
 
@@ -62,12 +62,12 @@
 
         public override string ToString()
         {
-            return $"LMove <{d1.x}, {d1.y}, {d1.z}> <{d2.x}, {d2.y}, {d2.z}>";
+            return $"LMove <{d1.X}, {d1.Y}, {d1.Z}> <{d2.X}, {d2.Y}, {d2.Z}>";
         }
 
-        public Coordinate Destination(Coordinate start)
+        public Voxel Destination(Voxel start, Matrix matrix)
         {
-            return start.Translate(d1).Translate(d2);
+            return matrix.Translate(matrix.Translate(start, d1), d2);
         }
     }
 
@@ -94,7 +94,7 @@
 
         public override string ToString()
         {
-            return $"Fill <{nd.x}, {nd.y}, {nd.z}>";
+            return $"Fill <{nd.X}, {nd.Y}, {nd.Z}>";
         }
     }
 
@@ -109,12 +109,12 @@
 
         public override string ToString()
         {
-            return $"Void <{nd.x}, {nd.y}, {nd.z}>";
+            return $"Void <{nd.X}, {nd.Y}, {nd.Z}>";
         }
     }
 
     public interface IMoveCommand
     {
-        Coordinate Destination(Coordinate start);
+        Voxel Destination(Voxel start, Matrix matrix);
     }
 }

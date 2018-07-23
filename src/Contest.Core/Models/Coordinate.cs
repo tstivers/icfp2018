@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Priority_Queue;
+using System;
 
 namespace Contest.Core.Models
 {
-    public class Coordinate
+    public abstract class Coordinate : FastPriorityQueueNode
     {
         public Coordinate(byte x, byte y, byte z)
         {
@@ -18,13 +18,6 @@ namespace Contest.Core.Models
 
         public readonly byte Z;
 
-        public static readonly Coordinate Zero = new Coordinate(0, 0, 0);
-
-        public Coordinate Translate(CoordinateDifference d)
-        {
-            return new Coordinate((byte)(X + d.x), (byte)(Y + d.y), (byte)(Z + d.z));
-        }
-
         public override string ToString()
         {
             return $"<{X}, {Y}, {Z}>";
@@ -35,37 +28,17 @@ namespace Contest.Core.Models
             return Math.Abs(X - b.X) + Math.Abs(Y - b.Y) + Math.Abs(Z - b.Z);
         }
 
-        public CoordinateDifference GetDifference(Coordinate t)
+        public double dv(Coordinate b)
         {
-            return new CoordinateDifference((sbyte)(X - t.X), (sbyte)(Y - t.Y), (sbyte)(Z - t.Z));
+            var dx = b.X - X;
+            var dy = b.Y - Y;
+            var dz = b.Z - Z;
+            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
         }
 
-        public override bool Equals(object obj)
+        public CoordinateDifference Offset(Coordinate targetVoxel)
         {
-            var coordinate = obj as Coordinate;
-            return coordinate != null &&
-                   X == coordinate.X &&
-                   Y == coordinate.Y &&
-                   Z == coordinate.Z;
-        }
-
-        public override int GetHashCode()
-        {
-            var hashCode = -307843816;
-            hashCode = hashCode * -1521134295 + X.GetHashCode();
-            hashCode = hashCode * -1521134295 + Y.GetHashCode();
-            hashCode = hashCode * -1521134295 + Z.GetHashCode();
-            return hashCode;
-        }
-
-        public static bool operator ==(Coordinate coordinate1, Coordinate coordinate2)
-        {
-            return EqualityComparer<Coordinate>.Default.Equals(coordinate1, coordinate2);
-        }
-
-        public static bool operator !=(Coordinate coordinate1, Coordinate coordinate2)
-        {
-            return !(coordinate1 == coordinate2);
+            return new CoordinateDifference((sbyte)(targetVoxel.X - this.X), (sbyte)(targetVoxel.Y - this.Y), (sbyte)(targetVoxel.Z - this.Z));
         }
     }
 }

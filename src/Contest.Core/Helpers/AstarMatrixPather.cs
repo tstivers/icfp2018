@@ -20,7 +20,7 @@ namespace Contest.Controllers
             _matrix = matrix;
         }
 
-        public (int cost, List<Command> commands) GetRouteTo(Voxel start, Voxel goal)
+        public List<Command> GetRouteTo(Voxel start, Voxel goal)
         {
             var sw = Stopwatch.StartNew();
 
@@ -34,7 +34,7 @@ namespace Contest.Controllers
             var open_set_hash = new System.Collections.Generic.HashSet<Coordinate>();
 
             if (_unreachable.Contains(goal))
-                return (-1, null);
+                return null;
 
             while (!open_set.IsEmpty)
             {
@@ -87,7 +87,7 @@ namespace Contest.Controllers
             if (sw.ElapsedMilliseconds > 1000)
                 Log.Debug($"Failed to generate path path in {sw.ElapsedMilliseconds:N0} ms ({closed_set.Count:N0} closed, {came_from.Count:N0} examined)");
 
-            return (0, null);
+            return null;
         }
 
         private float GetFScore(Voxel current, Voxel neighbor, int[] offset)
@@ -100,7 +100,7 @@ namespace Contest.Controllers
             return 1;
         }
 
-        private (int cost, List<Command> commands) ReconstructPath(Dictionary<Voxel, Voxel> came_from, Voxel start, Voxel current)
+        private List<Command> ReconstructPath(Dictionary<Voxel, Voxel> came_from, Voxel start, Voxel current)
         {
             List<Command> commands = new List<Command>();
 
@@ -114,7 +114,7 @@ namespace Contest.Controllers
 
             commands.Reverse();
 
-            return (commands.Count, commands);
+            return commands;
         }
 
         public IEnumerable<Voxel> AdjacentVoxels(Voxel origin)

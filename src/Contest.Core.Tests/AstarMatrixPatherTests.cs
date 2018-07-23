@@ -17,11 +17,11 @@ namespace Contest.Core.Tests
 
             var path = pather.GetRouteTo(m.Get(19, 19, 19), m.Get(0, 0, 0));
 
-            Assert.That(path.commands.Count, Is.GreaterThan(0));
+            Assert.That(path.Count, Is.GreaterThan(0));
 
-            var compressed = CommandOptimizer.Compress(path.commands);
+            var compressed = CommandOptimizer.Compress(path);
 
-            Assert.That(path.commands.Count, Is.GreaterThan(compressed.Count));
+            Assert.That(path.Count, Is.GreaterThan(compressed.Count));
         }
     }
 }
