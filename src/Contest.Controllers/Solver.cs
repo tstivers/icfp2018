@@ -14,7 +14,7 @@ namespace Contest.Controllers
 
         public MatterSystem MatterSystem { get; set; }
         public string Name { get; set; }
-        public List<Voxel> RemainingVoxels { get; set; }
+        public HashSet<Voxel> RemainingVoxels { get; set; }
 
         public Solver(string targetFile, string sourceFile)
         {
@@ -37,7 +37,8 @@ namespace Contest.Controllers
             Name = Path.GetFileNameWithoutExtension(outputFile);
 
             // get all the target voxels
-            RemainingVoxels = MatterSystem.Matrix.Storage.Where(x => x.Filled != x.Target).ToList();
+            RemainingVoxels = new HashSet<Voxel>(MatterSystem.Matrix.Storage.Where(x => x.Filled != x.Target));
+
             var lastCompletePercent = 0;
             var startCount = RemainingVoxels.Count;
 
@@ -83,12 +84,15 @@ namespace Contest.Controllers
 
             MatterSystem.ExecuteCommands(CommandOptimizer.Compress(homeRoute));
 
-            // halt
-            MatterSystem.ExecuteCommand(1, new CommandHalt());
+            if (outputFile != null)
+            {
+                // halt
+                MatterSystem.ExecuteCommand(1, new CommandHalt());
 
-            TraceFile.WriteTraceFile(outputFile, MatterSystem.Trace);
-
-            Log.Debug($"{Path.GetFileNameWithoutExtension(outputFile)} Finished solution ");
+                // save trace file
+                TraceFile.WriteTraceFile(outputFile, MatterSystem.Trace);
+                Log.Debug($"{Path.GetFileNameWithoutExtension(outputFile)} Finished solution ");
+            }
         }
 
         public abstract void ToggleVoxel(Voxel targetVoxel);

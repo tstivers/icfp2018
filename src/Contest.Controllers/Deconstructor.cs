@@ -1,6 +1,7 @@
 ﻿using Contest.Core.Models;
 using Contest.Core.Octree;
 using System.Linq;
+using C5;
 
 namespace Contest.Controllers
 {
@@ -35,12 +36,14 @@ namespace Contest.Controllers
 
             var pos = MatterSystem.Bots[1].Position;
             var pathFinder = new AstarMatrixPather(MatterSystem.Matrix);
+            var ungrounded = new HashSet<Voxel>();
 
             // check nearbies
             foreach (var v in pos.Nearby.Where(x => x.Filled))
             {
                 if (MatterSystem.Matrix.WillUnground(v))
                 {
+                    ungrounded.Add(v);
                     continue;
                 }
 
@@ -50,6 +53,7 @@ namespace Contest.Controllers
             for (var i = 4; i < MatterSystem.Matrix.Resolution; i++)
             {
                 var target = Octree.GetNearby(pos, i)
+                    .Where(x => !ungrounded.Contains(x))
                     .OrderByDescending(x => x.Y)
                     .ThenBy(x => x.dv(pos));
 
@@ -57,6 +61,7 @@ namespace Contest.Controllers
                 {
                     if (MatterSystem.Matrix.WillUnground(v))
                     {
+                        ungrounded.Add(v);
                         continue;
                     }
 

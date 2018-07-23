@@ -6,16 +6,17 @@ namespace Contest.Console
 {
     internal class Program
     {
-        private static int[] AssemblyProblems =
+        private static readonly int[] AssemblyProblems =
         {
-            4, 8, 11, 17, 19, 20, 22, 32, 34, 44, 46, 52, 55, 61, 63, 80, 95, 97, 98, 99, 108, 118, 140, 143, 156, 162,
-            164, 166, 169, 174
+            /*4, 8, 11, 17, 19, 20, 22, 32, 34, 44, 46, 52, 55, 61, 63, 80, 95, 97, 98,*/ 99/*, 108, 118, 140, 143, 156, 162,*/
+            //164, 166, 169,
+            //174
         };
 
-        private static int[] DeconstructionProblems =
+        private static readonly int[] DeconstructionProblems =
         {
-            1, 14, 22, 35, 36, 44, 56, 76, /*102,*/ 103, 106, 107, 111, 120, /*124,*/ 127, 136, 137, 151, 152, 156, 163, 167,
-            168, 173, 175, 179, 181
+            1, 14, 22, 35, 36, 44, 56, 76, /*102,*/ /*103, 106,*/ /*107, 111,*//* 120,*/ /*124,*/ /*127,*//* 136,*//* 137,*/ /*151,*/ /*152,*//* 156,*/ 163, /*167,*/
+            /*168,*/ /*173, *//*175,*/ /*179,*/ 181
         };
 
         private static int[] ReassemblyProblems =
@@ -27,13 +28,40 @@ namespace Contest.Console
         {
             log4net.Config.XmlConfigurator.Configure();
 
-            var problems = DeconstructionProblems.SkipWhile(x => x < 100);
+            SolveAssembly();
+        }
+
+        public static void SolveAssembly()
+        {
+            var problems = AssemblyProblems;
 
             Parallel.ForEach(problems, new ParallelOptions { MaxDegreeOfParallelism = 1 }, i =>
-              {
-                  var solver = new Deconstructor($"../../../../problems/full/FD{i:D3}_src.mdl");
-                  solver.Solve($"../../../../output/full/FD{i:D3}.nbt");
-              });
+            {
+                var solver = new Assembler($"../../../../problems/full/FA{i:D3}_tgt.mdl");
+                solver.Solve($"../../../../output/full/FA{i:D3}.nbt");
+            });
+        }
+
+        public static void SolveDeconstruction()
+        {
+            var problems = DeconstructionProblems.SkipWhile(x => x < 165);
+
+            Parallel.ForEach(problems, new ParallelOptions { MaxDegreeOfParallelism = 1 }, i =>
+            {
+                var solver = new Deconstructor($"../../../../problems/full/FD{i:D3}_src.mdl");
+                solver.Solve($"../../../../output/full/FD{i:D3}.nbt");
+            });
+        }
+
+        public static void SolveReassembly()
+        {
+            var problems = ReassemblyProblems;
+
+            Parallel.ForEach(problems, new ParallelOptions { MaxDegreeOfParallelism = 1 }, i =>
+            {
+                var solver = new Reassembler($"../../../../problems/full/FR{i:D3}_src.mdl", $"../../../../problems/full/FR{i:D3}_tgt.mdl");
+                solver.Solve($"../../../../output/full/FR{i:D3}.nbt");
+            });
         }
     }
 }

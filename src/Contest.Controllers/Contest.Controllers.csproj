@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Assembler.cs" />
     <Compile Include="Deconstructor.cs" />
+    <Compile Include="Reassembler.cs" />
     <Compile Include="Solver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
