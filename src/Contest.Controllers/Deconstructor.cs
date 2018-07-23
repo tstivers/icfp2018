@@ -18,7 +18,6 @@ namespace Contest.Controllers
         }
 
         public VoxelOctree Octree;
-        public List<HashSet<Voxel>> Trunks = new List<HashSet<Voxel>>();
 
         public override void ToggleVoxel(Voxel targetVoxel)
         {

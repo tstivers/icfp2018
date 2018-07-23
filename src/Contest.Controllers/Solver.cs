@@ -34,7 +34,8 @@ namespace Contest.Controllers
 
         public void Solve(string outputFile)
         {
-            Name = Path.GetFileNameWithoutExtension(outputFile);
+            if (outputFile != null)
+                Name = Path.GetFileNameWithoutExtension(outputFile);
 
             // get all the target voxels
             RemainingVoxels = new HashSet<Voxel>(MatterSystem.Matrix.Storage.Where(x => x.Filled != x.Target));

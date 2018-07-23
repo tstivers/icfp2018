@@ -124,7 +124,8 @@ namespace Contest.Core.Models
             foreach (var v in voxel.Adjacent.Where(x => x.Filled))
             {
                 // find path from v to ground
-                if (!AstarGroundFinder.CanReachGround(v, voxel, this))
+                var newTrunks = AstarGroundFinder.CanReachGround(v, voxel, this);
+                if (newTrunks == null)
                     return true;
             }
 

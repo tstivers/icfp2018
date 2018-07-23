@@ -28,40 +28,40 @@ namespace Contest.Console
         {
             log4net.Config.XmlConfigurator.Configure();
 
-            SolveReassembly();
+            var problem = int.Parse(args[1]);
+
+            switch (args[0])
+            {
+                case "FA":
+                    SolveAssembly(problem);
+                    break;
+                case "FR":
+                    SolveReassembly(problem);
+                    break;
+                case "FD":
+                    SolveDeconstruction(problem);
+                    break;
+            }
+
         }
 
-        public static void SolveAssembly()
+        public static void SolveAssembly(int number)
         {
-            var problems = Enumerable.Range(123, 185);
-
-            Parallel.ForEach(problems, new ParallelOptions { MaxDegreeOfParallelism = 1 }, i =>
-            {
-                var solver = new Assembler($"../../../../problems/full/FA{i:D3}_tgt.mdl");
-                solver.Solve($"../../../../output/full/FA{i:D3}.nbt");
-            });
+            var solver = new Assembler($"problems/full/FA{number:D3}_tgt.mdl");
+            solver.Solve($"output/full/FA{number:D3}.nbt");
         }
 
-        public static void SolveDeconstruction()
+        public static void SolveDeconstruction(int number)
         {
-            var problems = Enumerable.Range(1, 185).Skip(63);
-
-            Parallel.ForEach(problems, new ParallelOptions { MaxDegreeOfParallelism = 1 }, i =>
-            {
-                var solver = new Deconstructor($"../../../../problems/full/FD{i:D3}_src.mdl");
-                solver.Solve($"../../../../output/full/FD{i:D3}.nbt");
-            });
+                var solver = new Deconstructor($"problems/full/FD{number:D3}_src.mdl");
+                solver.Solve($"output/full/FD{number:D3}.nbt");
         }
 
-        public static void SolveReassembly()
+        public static void SolveReassembly(int number)
         {
-            var problems = Enumerable.Range(1, 114).Skip(68);
 
-            Parallel.ForEach(problems, new ParallelOptions { MaxDegreeOfParallelism = 1 }, i =>
-            {
-                var solver = new Reassembler($"../../../../problems/full/FR{i:D3}_tgt.mdl", $"../../../../problems/full/FR{i:D3}_src.mdl");
-                solver.Solve($"../../../../output/full/FR{i:D3}.nbt");
-            });
+                var solver = new Reassembler($"problems/full/FR{number:D3}_tgt.mdl", $"problems/full/FR{number:D3}_src.mdl");
+                solver.Solve($"output/full/FR{number:D3}.nbt");
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +24,7 @@ namespace Contest.Controllers
         public void Solve(string outputFile)
         {
             var d = new Deconstructor(_sourceFile);
+            d.Name = Path.GetFileNameWithoutExtension(outputFile);
             d.Solve(null);
             
             var a = new Assembler(_targetFile);
